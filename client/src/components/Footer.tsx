@@ -9,14 +9,14 @@ const Footer: React.FC = () => {
           © {new Date().getFullYear()} Gmail Declutter. Not affiliated with Google.
         </p>
         <div className="flex space-x-4">
-          <Link href="/privacy">
-            <a className="text-xs text-[#4285F4] hover:underline">Privacy Policy</a>
+          <Link href="/privacy" className="text-xs text-[#4285F4] hover:underline">
+            Privacy Policy
           </Link>
-          <Link href="/terms">
-            <a className="text-xs text-[#4285F4] hover:underline">Terms of Service</a>
+          <Link href="/terms" className="text-xs text-[#4285F4] hover:underline">
+            Terms of Service
           </Link>
-          <Link href="/help">
-            <a className="text-xs text-[#4285F4] hover:underline">Help</a>
+          <Link href="/help" className="text-xs text-[#4285F4] hover:underline">
+            Help
           </Link>
         </div>
       </div>
