@@ -24,46 +24,12 @@ const Header: React.FC<HeaderProps> = ({ showProfile = false }) => {
         <div className="flex items-center space-x-2">
           {/* App Logo */}
           <Link href="/">
-            <div className="w-10 h-10 flex items-center justify-center cursor-pointer">
-              <svg
-                className="w-8 h-8"
-                viewBox="0 0 40 40"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect width="40" height="40" fill="#f5f9ff" rx="8" ry="8" />
-                {/* Gmail Logo simplified */}
-                <path
-                  d="M8,8 L32,8 L32,32 L8,32 L8,8 Z"
-                  fill="#ffffff"
-                  stroke="#e0e0e0"
-                  strokeWidth="1"
-                />
-                <path
-                  d="M8,8 L20,18 L32,8 L32,32 L8,32 L8,8 Z"
-                  fill="none"
-                  stroke="#ea4335"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M8,8 L20,18 L32,8"
-                  fill="none"
-                  stroke="#ea4335"
-                  strokeWidth="2"
-                />
-                {/* Small broom icon */}
-                <path
-                  d="M28,20 L24,24"
-                  stroke="#4285f4"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M24,24 C24,24 26,26 27,27 C28,28 29,27 28,26 C27,25 25,23 25,23"
-                  fill="#fbbc05"
-                  stroke="#4285f4"
-                  strokeWidth="0.5"
-                />
-              </svg>
+            <div className="w-10 h-10 flex items-center justify-center cursor-pointer overflow-hidden rounded-md">
+              <img
+                src="/attached_assets/gmail%20declutterer.jpg"
+                alt="Gmail Declutter Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
           </Link>
           <Link href="/">

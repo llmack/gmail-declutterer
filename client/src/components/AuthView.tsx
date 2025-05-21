@@ -22,93 +22,13 @@ const AuthView: React.FC = () => {
   return (
     <div className="fade-in">
       <div className="max-w-2xl mx-auto py-12">
-        {/* Welcome illustration */}
+        {/* Custom logo */}
         <div className="mb-8 text-center">
-          <svg
-            className="mx-auto w-64 h-64"
-            viewBox="0 0 100 100"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect width="100" height="100" fill="#f5f9ff" rx="10" ry="10" />
-            <g transform="translate(20, 20) scale(0.6)">
-              {/* Gmail Logo */}
-              <path
-                d="M10,10 L90,10 L90,90 L10,90 L10,10 Z"
-                fill="#ffffff"
-                stroke="#e0e0e0"
-                strokeWidth="2"
-              />
-              <path
-                d="M10,10 L50,45 L90,10 L90,90 L10,90 L10,10 Z"
-                fill="none"
-                stroke="#ea4335"
-                strokeWidth="6"
-              />
-              <path
-                d="M10,10 L50,45 L90,10"
-                fill="none"
-                stroke="#ea4335"
-                strokeWidth="6"
-              />
-              {/* Broom */}
-              <path
-                d="M80,60 L60,80"
-                stroke="#4285f4"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <path
-                d="M60,80 C60,80 65,85 70,90 C75,95 80,90 75,85 C70,80 65,75 65,75"
-                fill="#fbbc05"
-                stroke="#4285f4"
-                strokeWidth="1"
-              />
-              {/* Trash bin */}
-              <rect
-                x="30"
-                y="60"
-                width="20"
-                height="25"
-                fill="#9aa0a6"
-                rx="2"
-                ry="2"
-              />
-              <rect
-                x="28"
-                y="57"
-                width="24"
-                height="3"
-                fill="#5f6368"
-                rx="1"
-                ry="1"
-              />
-              <line
-                x1="35"
-                y1="65"
-                x2="35"
-                y2="80"
-                stroke="#ffffff"
-                strokeWidth="1"
-                strokeDasharray="2,2"
-              />
-              <line
-                x1="45"
-                y1="65"
-                x2="45"
-                y2="80"
-                stroke="#ffffff"
-                strokeWidth="1"
-                strokeDasharray="2,2"
-              />
-              {/* Small envelope in trash */}
-              <path
-                d="M33,70 L37,73 L41,70 L41,74 L33,74 L33,70 Z"
-                fill="#ffffff"
-                stroke="#e0e0e0"
-                strokeWidth="0.5"
-              />
-            </g>
-          </svg>
+          <img 
+            src="/attached_assets/gmail%20declutterer.jpg" 
+            alt="Gmail Declutter Logo" 
+            className="mx-auto w-64 h-64 rounded-lg shadow-md"
+          />
         </div>
 
         <div className="bg-surface rounded-xl shadow-card p-8">
