@@ -25,7 +25,7 @@ const AuthView: React.FC = () => {
         {/* Custom logo */}
         <div className="mb-8 text-center">
           <img 
-            src="/attached_assets/gmail%20declutterer.jpg" 
+            src="attached_assets/gmail%20declutterer.jpg" 
             alt="Gmail Declutter Logo" 
             className="mx-auto w-64 h-64 rounded-lg shadow-md"
           />
