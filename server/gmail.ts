@@ -7,7 +7,7 @@ import { OAuth2Client } from "google-auth-library";
 export function getOAuth2Client(): OAuth2Client {
   const clientId = process.env.GOOGLE_CLIENT_ID || "";
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/api/auth/callback";
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/auth/callback`;
   
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
