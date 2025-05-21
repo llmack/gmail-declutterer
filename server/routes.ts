@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ url });
   });
 
-  app.get('/api/auth/callback', async (req, res) => {
+  app.get('/auth/callback', async (req, res) => {
     try {
       const { code } = req.query;
       
@@ -51,8 +51,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set user in session
       req.session.userId = user.id;
-      req.session.accessToken = user.accessToken;
-      req.session.refreshToken = user.refreshToken;
+      
+      if (user.accessToken) {
+        req.session.accessToken = user.accessToken;
+      }
+      
+      if (user.refreshToken) {
+        req.session.refreshToken = user.refreshToken;
+      }
       
       // Redirect to frontend
       res.redirect('/');
