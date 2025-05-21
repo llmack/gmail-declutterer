@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ url });
   });
 
-  app.get('/auth/callback', async (req, res) => {
+  app.get('/api/auth/callback', async (req, res) => {
     try {
       const { code } = req.query;
       
