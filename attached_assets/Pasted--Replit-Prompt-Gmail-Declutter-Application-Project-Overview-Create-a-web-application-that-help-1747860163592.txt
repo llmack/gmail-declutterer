@@ -1,0 +1,97 @@
+# Replit Prompt: Gmail Declutter Application
+
+## Project Overview
+Create a web application that helps users declutter their Gmail inbox by intelligently identifying and removing unnecessary emails. The application should authenticate with Google, analyze email patterns, and apply customizable rules to safely delete unwanted emails while preserving important content.
+
+## Core Requirements
+
+### 1. Google Authentication
+- Implement Google OAuth 2.0 for authentication
+- Request necessary Gmail API permissions
+- Securely store and refresh authentication tokens
+- Provide clear permission explanations to users
+
+### 2. Email Classification System
+Build an intelligent system that can categorize emails into:
+- Temporary code emails (verification codes, OTPs)
+- Subscription emails (regular emails from the same sender)
+- Promotional emails (deals, coupons, offers)
+- News emails (newsletters, briefs, alerts)
+- Other regular communication
+
+### 3. Rule-Based Deletion Engine
+Implement the following deletion rules:
+- Delete temporary code emails after 24 hours
+- Delete subscription emails with less than 10% open rate
+- Delete expired promotional emails or those without coupon codes/deals
+- Delete news emails older than 30 days
+- Allow custom rules for other subscription sources
+
+### 4. Safety Mechanisms
+- Prevent deletion of critical emails (preserve emails with attachments, from contacts, etc.)
+- Implement preview functionality before actual deletion
+- Provide undo/recovery options for deleted emails
+- Ensure user confirmation for bulk operations
+
+### 5. User Interface
+- Create a clean, responsive dashboard showing email statistics
+- Build an intuitive rule configuration interface
+- Provide clear reporting on deletion results
+- Implement execution controls (run now, schedule, preview)
+
+## Technical Guidelines
+
+### Frontend
+- Use React.js for building the UI
+- Implement a responsive design (works on mobile and desktop)
+- Apply clean, modern visual design principles
+- Ensure accessibility standards are met
+
+### Backend
+- Use Node.js for the server-side logic
+- Implement efficient Gmail API integration
+- Design for high performance with large mailboxes
+- Handle API rate limits appropriately
+
+### History and Preferences
+- Provide a log of how many emails have been deleted by sender, and based on what rule
+- Provide an ability to remove or specify the deletion rules for a sender
+
+### Data Management
+- Do not store email content permanently
+- Use secure storage for authentication tokens
+- Implement caching for improved performance
+- Ensure GDPR compliance in data handling
+
+## Advanced Features (if time permits)
+- Machine learning for smarter email classification
+- Email content analysis for more precise categorization
+- Learning from user corrections to improve rules
+- Comprehensive analytics on email usage patterns
+
+## Development Process
+1. Set up the project environment and dependencies
+2. Implement Google authentication flow
+3. Build basic Gmail API integration
+4. Create email classification system
+5. Implement rule processing engine
+6. Develop user interface components
+7. Add safety mechanisms
+8. Implement reporting system
+9. Perform testing and optimization
+10. Deploy and document the application
+
+## Deliverables
+- Fully functional web application deployed on Replit
+- Source code with clear documentation
+- User guide explaining features and usage
+- Technical documentation covering architecture and APIs
+
+## Important Considerations
+- Prioritize email security and privacy
+- Ensure robust error handling
+- Optimize for performance with large mailboxes
+- Create intuitive user experience
+- Implement thorough testing
+
+This application should provide a significant improvement to Gmail users' experience by intelligently cleaning up their inbox while maintaining control over what gets deleted.

@@ -1,0 +1,153 @@
+Gmail Declutter App - Product Requirements Document
+TL;DR
+Gmail Declutter helps engineers and power users drastically shrink Gmail clutter and storage by targeting subscriptions, newsletters, promotions, and outdated emails with user-defined, rule-based automation (no ML required). Seamless Google integration and clear, granular control ensure transparency and trust. The focus is on building a fast, low-friction MVP with concrete impact.
+
+Goals
+Business Goals
+	•	Reduce personal and collective Gmail storage waste and associated costs.
+	•	Demonstrate a pragmatic, fast-built MVP suitable for viral adoption, especially within the developer and Replit communities.
+	•	Promote digital self-ownership and data control ("own your data").
+	•	Provide a compelling technical showcase for Replit as a product build environment.
+User Goals
+	•	Minimize Gmail storage footprint with minimal manual effort.
+	•	Automate regular inbox cleanup with full transparency and granular control.
+	•	Enable users to preview, undo, and trust every automated decision.
+	•	Maintain and protect all important emails, with safeguards and clear audit trails.
+	•	Increase users' confidence and reduce digital anxiety caused by email clutter.
+Non-Goals
+	•	No implementation of machine learning or advanced AI in the MVP.
+	•	No semantic—or content-based—analysis; focus solely on rules, metadata, and pattern matching.
+	•	No support for non-Gmail email providers or platforms at launch.
+
+User Stories
+Power User / Engineer
+	•	As an engineer, I want to see the current size and breakdown of my Gmail clutter, so I know where my storage is wasted.
+	•	As an engineer, I want to write or tweak rules using regex, sender, or age parameters, so I have granular control.
+	•	As an engineer, I want to preview what will be deleted, so I can prevent loss of important messages.
+	•	As an engineer, I want to undo any batch cleanup, so I can recover from mistakes without worry.
+Typical Gmail User Overwhelmed by Clutter
+	•	As a user, I want to automate removing newsletters and promotional emails, so my inbox stays manageable.
+	•	As a user, I want to schedule regular declutters, so email mess never piles up again.
+	•	As a user, I want to review and approve deletions in advance, so I maintain trust in the process.
+	•	As a user, I want to see summaries and stats after each cleanup, so I feel good about my progress.
+	•	As a user, I want one-click restoration of mistakenly deleted messages, so I have complete peace of mind.
+
+Functional Requirements
+Email Management (High Priority)
+	•	Secure Google Authentication: Use OAuth, request only the minimal Gmail API scopes and provide clear permission explanations.
+	•	Efficient Email Scanning: Rapidly scan mailbox using rules based on metadata (date, sender/domain, subject patterns). Batch process for speed.
+	•	Rule Editor: Allow users to create, edit, and delete rules (regex, sender, age, type). Provide a list of common, useful templates.
+	•	Preview and Undo: Always provide a preview before deletion. Enable one-click batch undo for a defined recovery window (7 days).
+User Control & Transparency (Medium Priority)
+	•	Stats and Dashboard: Show storage usage, count of deleted emails, clutter by category, and history of actions.
+	•	Scheduling: Allow users to schedule recurring cleanups (e.g., weekly, monthly).
+	•	Exclusion and Exception Lists: Safe-list specific senders, domains, labels, or keywords from cleanup rules.
+	•	Audit Log: Maintain a history of actions with clear, user-accessible reporting.
+Learning, Export, and Growth (Low Priority)
+	•	Adaptive Suggestions: Optionally log user recoveries to suggest refinements for future rule creation.
+	•	Rule Export/Import: Users can export/import rules and settings for full portability.
+	•	Future-Ready Architecture: Structured for future integrations beyond Gmail and advanced analytics, without bloat in MVP.
+
+User Experience
+Entry Point & First-Time User Experience
+	•	Users discover Gmail Declutter via Replit, web search, or a colleague referral.
+	•	On visiting, users see a clear value proposition and “Connect with Google” button.
+	•	Upon clicking, a simple OAuth flow requests exactly the permissions needed, with transparent explanations.
+	•	First load: Immediate dashboard shows bloat summary (storage used, types of emails, actionable recommendations).
+Core Experience
+	•	Step 1: Dashboard and Review
+	◦	User sees at-a-glance stats: storage use, unread count, largest clutter sources.
+	◦	Prominent call-to-action: “Set up Rules” or “Quick Clean.”
+	•	Step 2: Rule Configuration
+	◦	UI offers easy editing and toggling of built-in rules (e.g., "Delete newsletters older than 30 days").
+	◦	Add/edit custom rules: by sender, keyword, age, or using regex.
+	◦	Exception/exclude management: whitelist senders, domains, or labels.
+	•	Step 3: Preview Changes
+	◦	Preview interface lists emails matching each rule, grouped by category.
+	◦	User can drill down, exclude items from deletion, or adjust rule parameters.
+	◦	Option to simulate cleanup without deleting (simulate: “what would be removed?”).
+	•	Step 4: Execution (“Run Now” or Schedule)
+	◦	User confirms batch actions, sees a clear progress indicator.
+	◦	Upon completion, dashboard shows summary: # of emails deleted, storage reclaimed, any items skipped for safety.
+	•	Step 5: Undo/Restore (7-Day Window)
+	◦	User can access the audit log, select batches or individual emails, and restore instantly.
+	◦	Undo feedback highlights what was recovered and suggests refining active rules if too many restores occur.
+Advanced Features & Edge Cases
+	•	Allow for manual rule overrides for rare senders or edge cases.
+	•	Soft deletion by moving messages to trash, not permanent delete.
+	•	Proactive detection of Gmail API rate limits with user-friendly error/retry messaging.
+UI/UX Highlights
+	•	Minimalist, responsive layout for web and mobile.
+	•	Clear onboarding, warnings, and visual previews.
+	•	High contrast, accessible design; supports keyboard and screen reader navigation.
+	•	Strong feedback and undo (“safety net”) mechanisms before and after every critical action.
+	•	No hidden operations: show users what’s happening, always.
+
+Narrative
+Stacey, a senior engineer, dreads opening her Gmail and seeing over 60,000 unread emails—mostly old news, expired offers, and subscription updates she’s long since tuned out. She suspects this digital clutter is a huge storage sink and a persistent source of anxiety but lacks the time (or patience) for manual cleanup.
+She finds Gmail Declutter through Replit. After a friendly, transparent authentication, the dashboard spits out a breakdown: half her storage lost to newsletters, a third to aged promotional mail. She sets up a quick rule—delete news older than two weeks, sweep up expired promotions, and safe-list her invoices label. The preview feature reassures her that nothing important will be lost. Confident, she runs the cleanup and instantly frees up 3GB.
+The audit log later highlights one receipt that got swept up; Stacy restores it with a click. Impressed, she schedules monthly runs and feels a new sense of control and calm with her inbox. For Replit, this success story signals hacker-friendly, impactful software—fueling viral buzz in the dev community.
+
+Success Metrics
+User-Centric Metrics
+	•	Percentage reduction in Gmail storage after cleanup (tracked per user).
+	•	Number of emails deleted (and breakdown by rule/category).
+	•	Undos/restore actions as a trust indicator.
+	•	Net Promoter Score (NPS) or direct user feedback rating.
+	•	Average user time saved on manual cleanup.
+Business Metrics
+	•	Number of active users, especially developers adopting via Replit.
+	•	Viral referral/mentions (tracked via referral codes or landing page analytics).
+	•	Cost savings from reduced storage and improved system hygiene.
+Technical Metrics
+	•	Rate of API errors or Gmail rate limit encounters.
+	•	Average time to process 1,000 emails or complete primary batch action.
+	•	Percentage of successful undos/restores without data loss.
+Tracking Plan
+	•	OAuth logins.
+	•	Dashboard/cleanup rule edits.
+	•	Rule previews (simulations).
+	•	Cleanup batch executions.
+	•	Undo/restoration actions.
+	•	Scheduling setup (recurring jobs enabled).
+	•	User feedback prompts.
+
+Technical Considerations
+Technical Needs
+	•	Gmail API integration (minimal, focused scopes for reading, modifying, and labeling emails).
+	•	Session caching of email metadata to minimize repeated API calls.
+	•	Batch processing logic to operate efficiently on large mailbox datasets.
+	•	Onboard UI for rule creation, preview, and undo actions.
+Integration Points
+	•	Google OAuth for authentication and permissions.
+	•	Replit hosting/deployment (potential for featured plugin support).
+Data Storage & Privacy
+	•	Never persist email content; only store metadata, rules, and action logs locally or securely in user session.
+	•	Full user controls and export/delete options for any persistent metadata or rules.
+	•	Compliance with applicable data privacy regulations; clear, accessible documentation of data use.
+Scalability & Performance
+	•	Designed to operate fast on large mailboxes (100,000+ emails), using Gmail API batch endpoints.
+	•	Exponential backoff/retry logic to handle Google API rate limits gracefully.
+	•	No performance dependence on email size/content (metadata only).
+Potential Challenges
+	•	Navigating Gmail API quotas and rate limit responses.
+	•	Ensuring atomicity and correctness in batch deletes/restores.
+	•	Sustaining user trust—nothing is deleted without user preview and approval.
+
+Milestones & Sequencing
+Project Estimate
+	•	Small: 1–2 weeks for full MVP.
+Team Size & Composition
+	•	1–2 engineers (ideally full stack, with product/design empathy).
+Suggested Phases
+Phase 1: Core MVP (3 days)
+	•	Deliverables: OAuth authentication, core rule logic, metadata scanning, batch preview & undo functionality, minimal UI.
+	•	Dependencies: Google developer account, initial Replit deployment.
+Phase 2: Dashboard & User Control (3 days)
+	•	Deliverables: Visual dashboard for stats and cleanup history, rule editor wizard, exclusion/safe-list editing, audit log.
+	•	Dependencies: Phase 1 completed.
+Phase 3: Scheduling / Advanced Controls (3 days)
+	•	Deliverables: Scheduled run engine, additional built-in rule templates, email simulation/preview enhancements.
+	•	Dependencies: Core and dashboard features working.
+	•	Keep phases tight; release and gather user feedback after every iteration.
+	•	Adapt based on early user adoption and feedback signals.
