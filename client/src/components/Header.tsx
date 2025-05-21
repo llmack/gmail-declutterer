@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({ showProfile = false }) => {
           <Link href="/">
             <div className="w-10 h-10 flex items-center justify-center cursor-pointer overflow-hidden rounded-md">
               <img
-                src="attached_assets/gmail%20declutterer.jpg"
+                src="/attached_assets/gmail declutterer.jpg"
                 alt="Gmail Declutter Logo"
                 className="w-full h-full object-cover"
               />
