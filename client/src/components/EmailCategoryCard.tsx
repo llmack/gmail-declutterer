@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TemporaryCodeEmail } from '@/lib/types';
+import { 
+  TemporaryCodeEmail, 
+  SubscriptionEmail, 
+  PromotionalEmail, 
+  NewsletterEmail, 
+  RegularEmail, 
+  Email 
+} from '@/lib/types';
 import { getDaysAgoText } from '@/lib/utils';
 import PreviewModal from './PreviewModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+
+type CategoryEmail = TemporaryCodeEmail | SubscriptionEmail | PromotionalEmail | NewsletterEmail | RegularEmail;
 
 interface EmailCategoryCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
-  emails: TemporaryCodeEmail[];
+  emails: CategoryEmail[];
   onCleanup: (emailIds: string[]) => void;
+  onRemoveFromList?: (emailId: string, removeSender: boolean) => void;
   isLoading?: boolean;
 }
 
@@ -20,13 +31,31 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
   description,
   emails,
   onCleanup,
+  onRemoveFromList,
   isLoading = false
 }) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState<CategoryEmail | null>(null);
+  const [removeSender, setRemoveSender] = useState(false);
   
   const handleCleanup = () => {
     const emailIds = emails.map(email => email.id);
     onCleanup(emailIds);
+  };
+  
+  const openRemoveDialog = (email: CategoryEmail) => {
+    setSelectedEmail(email);
+    setRemoveDialogOpen(true);
+    setRemoveSender(false);
+  };
+  
+  const handleRemoveFromList = () => {
+    if (selectedEmail && onRemoveFromList) {
+      onRemoveFromList(selectedEmail.id, removeSender);
+      setRemoveDialogOpen(false);
+      setSelectedEmail(null);
+    }
   };
 
   return (
@@ -55,6 +84,7 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Subject</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Age</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
@@ -64,12 +94,24 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                     <td className="px-4 py-3 text-sm text-gray-900">{email.sender}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{email.subject}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{getDaysAgoText(email.daysAgo)}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {onRemoveFromList && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 text-gray-500 hover:text-red-500"
+                          onClick={() => openRemoveDialog(email)}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-4 py-8 text-sm text-center text-gray-600">
-                    No temporary code emails found.
+                  <td colSpan={4} className="px-4 py-8 text-sm text-center text-gray-600">
+                    No {title.toLowerCase()} emails found.
                   </td>
                 </tr>
               )}
@@ -120,6 +162,66 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
         title={`Preview ${title} Cleanup`}
         isLoading={isLoading}
       />
+
+      {/* Remove from list dialog */}
+      <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove from list</DialogTitle>
+            <DialogDescription>
+              Do you want to remove just this email or all emails from this sender?
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmail && (
+            <div className="p-4 my-2 border rounded-md bg-gray-50">
+              <p className="font-medium text-gray-700">{selectedEmail.sender}</p>
+              <p className="text-sm text-gray-500 mt-1">{selectedEmail.subject}</p>
+            </div>
+          )}
+          <div className="space-y-3 mt-2">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="radio" 
+                id="just-this" 
+                checked={!removeSender} 
+                onChange={() => setRemoveSender(false)}
+                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <label htmlFor="just-this" className="text-sm text-gray-700">
+                Just this email
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input 
+                type="radio" 
+                id="all-from-sender" 
+                checked={removeSender} 
+                onChange={() => setRemoveSender(true)}
+                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <label htmlFor="all-from-sender" className="text-sm text-gray-700">
+                All emails from this sender
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRemoveDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleRemoveFromList}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

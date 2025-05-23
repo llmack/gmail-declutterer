@@ -8,14 +8,22 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TemporaryCodeEmail } from '@/lib/types';
+import { 
+  TemporaryCodeEmail, 
+  SubscriptionEmail, 
+  PromotionalEmail, 
+  NewsletterEmail, 
+  RegularEmail 
+} from '@/lib/types';
 import { formatDate } from '@/lib/utils';
+
+type CategoryEmail = TemporaryCodeEmail | SubscriptionEmail | PromotionalEmail | NewsletterEmail | RegularEmail;
 
 interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  emails: TemporaryCodeEmail[];
+  emails: CategoryEmail[];
   title: string;
   isLoading?: boolean;
 }
