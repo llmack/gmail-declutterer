@@ -8,8 +8,8 @@ packages = ["jq"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+build = ["sh", "-c", "npm run build && mkdir -p dist/server/public && cp -r dist/public/* dist/server/public/"]
+run = ["sh", "-c", "NODE_ENV=production node dist/server/index.js"]
 
 [[ports]]
 localPort = 5000
