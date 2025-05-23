@@ -37,6 +37,9 @@ const Dashboard: React.FC = () => {
   
   // State to track the currently active category
   const [activeCategory, setActiveCategory] = useState("overview");
+  
+  // State to store senders that should be excluded from deletion
+  const [excludedSenders, setExcludedSenders] = useState<string[]>([]);
 
   // Profile data
   const { 
@@ -230,71 +233,24 @@ const Dashboard: React.FC = () => {
     }
   };
   
-  // Handle removing emails from a specific sender from the cleanup list
-  const handleRemoveBySender = (sender: string) => {
-    // Implementation based on which category is active
-    switch (activeCategory) {
-      case 'temp-codes':
-        if (tempCodeEmails) {
-          const filteredEmails = tempCodeEmails.filter(email => email.sender !== sender);
-          setLocalTempCodeEmails(filteredEmails);
-          toast({
-            title: 'Sender Removed',
-            description: `Emails from ${sender} won't be included in cleanup.`,
-            variant: 'default',
-          });
-        }
-        break;
-      case 'subscriptions':
-        if (subscriptionEmails) {
-          const filteredEmails = subscriptionEmails.filter(email => email.sender !== sender);
-          setLocalSubscriptionEmails(filteredEmails);
-          toast({
-            title: 'Sender Removed',
-            description: `Emails from ${sender} won't be included in cleanup.`,
-            variant: 'default',
-          });
-        }
-        break;
-      case 'promotions':
-        if (promotionalEmails) {
-          const filteredEmails = promotionalEmails.filter(email => email.sender !== sender);
-          setLocalPromotionalEmails(filteredEmails);
-          toast({
-            title: 'Sender Removed',
-            description: `Emails from ${sender} won't be included in cleanup.`,
-            variant: 'default',
-          });
-        }
-        break;
-      case 'newsletters':
-        if (newsletterEmails) {
-          const filteredEmails = newsletterEmails.filter(email => email.sender !== sender);
-          setLocalNewsletterEmails(filteredEmails);
-          toast({
-            title: 'Sender Removed',
-            description: `Emails from ${sender} won't be included in cleanup.`,
-            variant: 'default',
-          });
-        }
-        break;
-      case 'regular':
-        if (regularEmails) {
-          const filteredEmails = regularEmails.filter(email => email.sender !== sender);
-          setLocalRegularEmails(filteredEmails);
-          toast({
-            title: 'Sender Removed',
-            description: `Emails from ${sender} won't be included in cleanup.`,
-            variant: 'default',
-          });
-        }
-        break;
-      default:
-        toast({
-          title: 'Sender Removed',
-          description: `Emails from ${sender} won't be included in cleanup.`,
-          variant: 'default',
-        });
+  // Handle toggling a sender in the excluded list (for "Don't Delete" functionality)
+  const handleExcludeSender = (sender: string, shouldExclude: boolean) => {
+    if (shouldExclude) {
+      // Add sender to excluded list
+      setExcludedSenders(prev => [...prev, sender]);
+      toast({
+        title: 'Sender Excluded',
+        description: `Emails from "${sender}" will be excluded from cleanup.`,
+        variant: 'default',
+      });
+    } else {
+      // Remove sender from excluded list
+      setExcludedSenders(prev => prev.filter(s => s !== sender));
+      toast({
+        title: 'Sender Included',
+        description: `Emails from "${sender}" will be included in cleanup.`,
+        variant: 'default',
+      });
     }
   };
 
@@ -316,6 +272,12 @@ const Dashboard: React.FC = () => {
     regular: regularEmails?.length || 0
   };
 
+  // Filter out excluded senders from email lists
+  const filterExcludedSenders = (emails: any[]) => {
+    if (!emails) return [];
+    return emails.filter(email => !excludedSenders.includes(email.sender));
+  };
+  
   // Render the appropriate content based on the active category
   const renderCategoryContent = () => {
     switch (activeCategory) {
@@ -458,6 +420,27 @@ const Dashboard: React.FC = () => {
               These are verification codes, OTPs, and temporary login links that are no longer needed.
             </p>
             
+            {excludedSenders.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 border rounded-md">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Excluded Senders:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {excludedSenders.map(sender => (
+                    <div key={sender} className="inline-flex items-center bg-white px-2 py-1 rounded-md border text-sm">
+                      {sender}
+                      <button 
+                        onClick={() => handleExcludeSender(sender, false)}
+                        className="ml-2 text-gray-500 hover:text-gray-700"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <EmailCategoryCard
               icon={
                 <svg 
@@ -472,8 +455,9 @@ const Dashboard: React.FC = () => {
               }
               title="Temporary Codes"
               description="Verification codes, OTPs, and temporary login links that are no longer needed."
-              emails={tempCodeEmails || []}
+              emails={filterExcludedSenders(tempCodeEmails || [])}
               onCleanup={handleCleanup}
+              onRemoveFromList={handleExcludeSender}
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
