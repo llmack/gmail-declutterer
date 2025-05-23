@@ -217,16 +217,17 @@ const Dashboard: React.FC = () => {
           variant: 'default',
         });
         
-        // Refresh the data after cleanup
+        // Only refresh profile to update counts instead of all categories
         if (analysisStarted) {
-          await Promise.all([
-            refetchProfile(), 
-            refetchTempCodes(),
-            refetchSubscriptions(),
-            refetchPromotions(),
-            refetchNewsletters(),
-            refetchRegularEmails()
-          ]);
+          await refetchProfile();
+        }
+        
+        // If deletion was for a specific sender, go back to category view
+        if (senderInfo) {
+          // Stay on the same category view
+        } else if (category) {
+          // Go back to overview when done with a category
+          setActiveCategory('overview');
         }
       } else {
         toast({
@@ -358,10 +359,10 @@ const Dashboard: React.FC = () => {
                   }
                 />
                 
-                {/* Declutter Potential Card */}
+                {/* Categories Count Card */}
                 <StatsCard
-                  title="Declutter Potential"
-                  value={`${stats.declutterPotential}%`}
+                  title="Email Categories"
+                  value={Object.values(categoryCounts).reduce((a, b) => a + b, 0).toLocaleString()}
                   icon={
                     <svg 
                       fill="none" 
@@ -370,7 +371,7 @@ const Dashboard: React.FC = () => {
                       strokeWidth={2}
                       className="w-6 h-6"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   }
                   color="text-[#34A853]"
@@ -380,7 +381,39 @@ const Dashboard: React.FC = () => {
             
             {/* Category Summary */}
             <div className="mb-8">
-              <h2 className="text-xl font-medium text-gray-900 mb-4">Email Categories</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium text-gray-900">Email Categories</h2>
+                {/* Delete All Button */}
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => {
+                    // Collect all email IDs across categories
+                    const allEmailIds = [
+                      ...(tempCodeEmails || []),
+                      ...(subscriptionEmails || []),
+                      ...(promotionalEmails || []),
+                      ...(newsletterEmails || []),
+                      ...(regularEmails || [])
+                    ]
+                    .filter(email => !excludedSenders.includes(email.sender))
+                    .map(email => email.id);
+                    
+                    if (allEmailIds.length > 0) {
+                      handleCleanup(allEmailIds, "all-categories");
+                    } else {
+                      toast({
+                        title: "No Emails",
+                        description: "There are no emails to clean up.",
+                        variant: "default"
+                      });
+                    }
+                  }}
+                  disabled={trashEmailsMutation.isPending || !analysisStarted}
+                >
+                  Delete All ({Object.values(categoryCounts).reduce((a, b) => a + b, 0)})
+                </Button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button 
                   onClick={() => handleCategoryChange('temp-codes')}
