@@ -10,6 +10,8 @@ import {
   RegularEmail
 } from '@/lib/types';
 
+
+
 export function useGmailProfile(options = {}) {
   return useQuery<GmailProfile>({
     queryKey: ['/api/gmail/profile'],
@@ -66,15 +68,31 @@ export function useRegularEmails(options = {}) {
 export function useTrashEmails() {
   const queryClient = useQueryClient();
   
-  return useMutation<TrashEmailResponse, Error, string[]>({
-    mutationFn: async (messageIds: string[]) => {
-      const response = await apiRequest('POST', '/api/gmail/trash', { messageIds });
-      return response.json();
+  return useMutation<TrashEmailResponse, Error, { 
+    messageIds: string[]; 
+    category?: string;
+    senderInfo?: { email: string; name: string };
+  }>({
+    mutationFn: async (data) => {
+      console.log('Trashing emails:', data);
+      const result = await apiRequest<TrashEmailResponse>('/api/gmail/trash', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      return result;
     },
     onSuccess: () => {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/temp-codes'] });
+      // Invalidate all Gmail data queries
       queryClient.invalidateQueries({ queryKey: ['/api/gmail/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gmail/temp-codes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gmail/subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gmail/promotions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gmail/newsletters'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gmail/regular'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/history/deletions'] });
     }
   });
 }
