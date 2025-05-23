@@ -91,7 +91,7 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
               {emails.length > 0 ? (
                 // Group emails by sender
                 Object.entries(
-                  emails.reduce((acc, email) => {
+                  emails.reduce<Record<string, CategoryEmail[]>>((acc, email) => {
                     if (!acc[email.sender]) {
                       acc[email.sender] = [];
                     }
