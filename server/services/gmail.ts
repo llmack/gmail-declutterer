@@ -19,7 +19,7 @@ export async function getProfile(accessToken: string) {
   return response.data;
 }
 
-export async function listMessages(accessToken: string, query: string = '', maxResults: number = 50) {
+export async function listMessages(accessToken: string, query: string = '', maxResults: number = 100, orderBy: 'internalDate' | undefined = 'internalDate') {
   const client = getAuthClientForUser(accessToken);
   const gmail = google.gmail({ version: 'v1', auth: client });
   
@@ -27,6 +27,7 @@ export async function listMessages(accessToken: string, query: string = '', maxR
     userId: 'me',
     q: query,
     maxResults,
+    orderBy, // Sort by date, with oldest first
   });
   
   return response.data.messages || [];

@@ -110,18 +110,40 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {getDaysAgoText(Math.min(...(senderEmails as any[]).map(e => e.daysAgo)))}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm flex space-x-2">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-8 text-gray-500 hover:text-red-500"
+                        className="h-8 text-white bg-red-500 hover:bg-red-600 flex items-center"
                         onClick={() => {
                           const ids = (senderEmails as any[]).map(e => e.id);
                           onCleanup(ids);
                         }}
                       >
-                        Delete All
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
                       </Button>
+                      
+                      {onRemoveFromList && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-gray-700 border-gray-300 hover:bg-gray-100 flex items-center"
+                          onClick={() => {
+                            if (senderEmails.length > 0) {
+                              // Remove all emails from this sender from the list
+                              onRemoveFromList((senderEmails as any[])[0].id, true);
+                            }
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                          </svg>
+                          Don't Delete
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))
