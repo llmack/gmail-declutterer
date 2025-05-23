@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import LoadingState from '@/components/LoadingState';
 import { DeletionHistory } from '@shared/schema';
 import { toast } from '@/hooks/use-toast';
@@ -14,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 // Simple history page that shows deletion records
 const History: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [viewMode, setViewMode] = useState<'bySender' | 'byCategory' | 'byDate'>('bySender');
   const [excludedSenders, setExcludedSenders] = useState<string[]>([]);
   
   // Fetch deletion history from the server
@@ -79,6 +87,20 @@ const History: React.FC = () => {
         acc[senderKey] = [];
       }
       acc[senderKey].push(entry);
+      return acc;
+    }, {} as Record<string, DeletionHistory[]>);
+  }, [deletionHistory]);
+  
+  // Group deletion history by category
+  const groupedByCategory = React.useMemo(() => {
+    if (!deletionHistory) return {};
+    
+    return deletionHistory.reduce((acc, entry) => {
+      const categoryKey = entry.categoryType || 'unknown';
+      if (!acc[categoryKey]) {
+        acc[categoryKey] = [];
+      }
+      acc[categoryKey].push(entry);
       return acc;
     }, {} as Record<string, DeletionHistory[]>);
   }, [deletionHistory]);
@@ -253,29 +275,117 @@ const History: React.FC = () => {
                 </Card>
               )}
               
-              <Tabs defaultValue="all" className="mb-8" onValueChange={setActiveTab}>
-                <TabsList>
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="temporary">Temporary Codes</TabsTrigger>
-                  <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-                  <TabsTrigger value="promotions">Promotions</TabsTrigger>
-                  <TabsTrigger value="newsletters">Newsletters</TabsTrigger>
-                  <TabsTrigger value="regular">Regular</TabsTrigger>
-                </TabsList>
+              <div className="flex justify-between items-center mb-4">
+                <Tabs defaultValue="all" className="mb-4" onValueChange={setActiveTab}>
+                  <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="temporary">Temporary Codes</TabsTrigger>
+                    <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+                    <TabsTrigger value="promotions">Promotions</TabsTrigger>
+                    <TabsTrigger value="newsletters">Newsletters</TabsTrigger>
+                    <TabsTrigger value="regular">Regular</TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 
-                <TabsContent value="all" className="mt-4">
-                  <Card className="bg-white shadow-sm">
-                    <CardHeader>
-                      <CardTitle>All Deleted Emails</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {filteredHistory && filteredHistory.length > 0 ? (
-                        <div className="overflow-x-auto">
+                <div className="flex items-center">
+                  <span className="mr-2 text-sm text-gray-600">View as:</span>
+                  <Select 
+                    value={viewMode}
+                    onValueChange={(value) => setViewMode(value as any)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="View Mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bySender">By Sender</SelectItem>
+                      <SelectItem value="byCategory">By Category</SelectItem>
+                      <SelectItem value="byDate">By Date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <TabsContent value="all" className="mt-4">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle>All Deleted Emails</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {filteredHistory && filteredHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        {viewMode === 'byCategory' && (
+                          <table className="w-full">
+                            <thead className="bg-neutral-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Category</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Emails Deleted</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Senders Affected</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Storage Saved</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Last Deleted</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-200">
+                              {Object.entries(groupedByCategory).map(([category, entries]) => {
+                                // Calculate stats for this category
+                                const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
+                                const uniqueSenders = new Set(entries
+                                  .filter(e => e?.senderEmail)
+                                  .map(e => e.senderEmail));
+                                
+                                // Calculate storage saved
+                                const storageSavedKB = totalCount * 100; // 100KB per email
+                                const storageSavedMB = (storageSavedKB / 1024).toFixed(1);
+                                
+                                // Get latest deletion date
+                                const validEntries = entries.filter(e => e && e.deletedAt);
+                                const latestDate = validEntries.length > 0 
+                                  ? new Date(
+                                      Math.max(
+                                        ...validEntries.map(e => {
+                                          const dateVal = e.deletedAt;
+                                          return typeof dateVal === 'string' 
+                                            ? new Date(dateVal).getTime() 
+                                            : dateVal instanceof Date 
+                                              ? dateVal.getTime() 
+                                              : new Date().getTime();
+                                        })
+                                      )
+                                    )
+                                  : new Date();
+                                
+                                // Format category name for display
+                                let displayCategory;
+                                switch(category) {
+                                  case 'temporary_code': displayCategory = 'Temporary Codes'; break;
+                                  case 'subscription': displayCategory = 'Subscriptions'; break;
+                                  case 'promotional': displayCategory = 'Promotions'; break;
+                                  case 'newsletter': displayCategory = 'Newsletters'; break;
+                                  case 'regular': displayCategory = 'Regular Emails'; break;
+                                  default: displayCategory = category.charAt(0).toUpperCase() + category.slice(1);
+                                }
+                                
+                                return (
+                                  <tr key={category} className="hover:bg-neutral-50">
+                                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{displayCategory}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">{totalCount} emails</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">{uniqueSenders.size} senders</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">{storageSavedMB} MB</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                      {latestDate.toLocaleDateString()}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                        
+                        {viewMode === 'bySender' && (
                           <table className="w-full">
                             <thead className="bg-neutral-50">
                               <tr>
                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Category</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Categories</th>
                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
@@ -319,123 +429,483 @@ const History: React.FC = () => {
                                       case 'regular': return 'Regular';
                                       default: return cat;
                                     }
-                                  })
-                                  .join(', ');
+                                  });
                                 
                                 return (
                                   <tr key={sender} className="hover:bg-neutral-50">
                                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{categories}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">
-                                      {totalCount} 
-                                      <span className="text-xs text-gray-500 ml-1">
-                                        ({storageSavedMB} MB)
-                                      </span>
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                      <div className="flex flex-wrap gap-1">
+                                        {categories.map(cat => (
+                                          <span key={cat} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            {cat}
+                                          </span>
+                                        ))}
+                                      </div>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(latestDate.toISOString())}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                      {totalCount} emails ({storageSavedMB} MB)
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                      {latestDate.toLocaleDateString()}
+                                    </td>
                                     <td className="px-4 py-3 text-sm">
-                                      <Button 
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => window.open(getGmailTrashLink(sender), '_blank')}
-                                        className="h-8"
+                                      <a 
+                                        href={getGmailTrashLink(sender)} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800"
                                       >
                                         View in Gmail
-                                      </Button>
+                                      </a>
                                     </td>
                                   </tr>
                                 );
                               })}
                             </tbody>
                           </table>
-                        </div>
-                      ) : (
-                        <div className="p-8 text-center text-gray-500">
-                          No deletion history found. Start decluttering your inbox to track your progress here.
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {['temporary', 'subscriptions', 'promotions', 'newsletters', 'regular'].map(category => (
-                  <TabsContent key={category} value={category} className="mt-4">
-                    <Card className="bg-white shadow-sm">
-                      <CardHeader>
-                        <CardTitle>{category.charAt(0).toUpperCase() + category.slice(1)} Deleted Emails</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {filteredHistory && filteredHistory.length > 0 ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full">
-                              <thead className="bg-neutral-50">
-                                <tr>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-neutral-200">
-                                {Object.entries(
-                                  filteredHistory.reduce((acc, entry) => {
-                                    const email = entry?.senderEmail || 'unknown';
-                                    if (!acc[email]) {
-                                      acc[email] = [];
-                                    }
-                                    acc[email].push(entry);
-                                    return acc;
-                                  }, {} as Record<string, DeletionHistory[]>)
-                                ).map(([sender, entries]) => {
-                                  const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
-                                  
-                                  // Get the latest date
-                                  const datesArray = entries
-                                    .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
-                                    .map(e => {
-                                      const dateVal = e.deletedAt!; // We've filtered out null/undefined values
-                                      return typeof dateVal === 'string' 
-                                        ? new Date(dateVal).getTime() 
-                                        : dateVal instanceof Date 
-                                          ? dateVal.getTime() 
-                                          : new Date().getTime();
-                                    });
-                                    
-                                  const latestDate = datesArray.length > 0
-                                    ? new Date(Math.max(...datesArray))
-                                    : new Date();
+                        )}
+                        
+                        {viewMode === 'byDate' && (
+                          <table className="w-full">
+                            <thead className="bg-neutral-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Category</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-200">
+                              {filteredHistory
+                                .sort((a, b) => {
+                                  const dateA = a.deletedAt ? new Date(a.deletedAt).getTime() : 0;
+                                  const dateB = b.deletedAt ? new Date(b.deletedAt).getTime() : 0;
+                                  return dateB - dateA; // Sort by newest first
+                                })
+                                .map((entry) => {
+                                  // Format category name
+                                  let categoryDisplay;
+                                  switch(entry.categoryType) {
+                                    case 'temporary_code': categoryDisplay = 'Temporary Codes'; break;
+                                    case 'subscription': categoryDisplay = 'Subscriptions'; break;
+                                    case 'promotional': categoryDisplay = 'Promotions'; break;
+                                    case 'newsletter': categoryDisplay = 'Newsletters'; break;
+                                    case 'regular': categoryDisplay = 'Regular'; break;
+                                    default: categoryDisplay = entry.categoryType;
+                                  }
                                   
                                   return (
-                                    <tr key={sender} className="hover:bg-neutral-50">
-                                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
-                                      <td className="px-4 py-3 text-sm text-gray-700">{totalCount}</td>
-                                      <td className="px-4 py-3 text-sm text-gray-700">{formatDate(latestDate.toISOString())}</td>
-                                      <td className="px-4 py-3 text-sm">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => window.open(getGmailTrashLink(sender), '_blank')}
-                                          className="h-8"
-                                        >
-                                          View in Gmail
-                                        </Button>
+                                    <tr key={entry.id} className="hover:bg-neutral-50">
+                                      <td className="px-4 py-3 text-sm text-gray-700">
+                                        {entry.deletedAt ? new Date(entry.deletedAt).toLocaleDateString() : 'Unknown date'}
+                                      </td>
+                                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                        {categoryDisplay}
+                                      </td>
+                                      <td className="px-4 py-3 text-sm text-gray-700">
+                                        {entry.senderEmail || 'Unknown sender'}
+                                      </td>
+                                      <td className="px-4 py-3 text-sm text-gray-700">
+                                        {entry.count} emails
                                       </td>
                                     </tr>
                                   );
                                 })}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="p-8 text-center text-gray-500">
-                            No deletion history found for {category} emails.
-                          </div>
+                            </tbody>
+                          </table>
                         )}
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                ))}
-              </Tabs>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No deletion history found. Start decluttering your inbox to track your progress here.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="temporary" className="mt-4">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Temporary Codes Deletion History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {filteredHistory && filteredHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-neutral-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200">
+                            {Object.entries(
+                              filteredHistory.reduce((acc, entry) => {
+                                const email = entry?.senderEmail || 'unknown';
+                                if (!acc[email]) {
+                                  acc[email] = [];
+                                }
+                                acc[email].push(entry);
+                                return acc;
+                              }, {} as Record<string, DeletionHistory[]>)
+                            ).map(([sender, entries]) => {
+                              const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
+                              
+                              // Get the latest date
+                              const datesArray = entries
+                                .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
+                                .map(e => {
+                                  const dateVal = e.deletedAt!;
+                                  return typeof dateVal === 'string' 
+                                    ? new Date(dateVal).getTime() 
+                                    : dateVal instanceof Date 
+                                      ? dateVal.getTime() 
+                                      : new Date().getTime();
+                                });
+                                
+                              const latestDate = datesArray.length > 0
+                                ? new Date(Math.max(...datesArray))
+                                : new Date();
+                              
+                              return (
+                                <tr key={sender} className="hover:bg-neutral-50">
+                                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{totalCount} emails</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{latestDate.toLocaleDateString()}</td>
+                                  <td className="px-4 py-3 text-sm">
+                                    <a 
+                                      href={getGmailTrashLink(sender)} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      View in Gmail
+                                    </a>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No temporary code emails have been deleted yet.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Other tabs similar to the temporary tab, with different titles */}
+              <TabsContent value="subscriptions" className="mt-4">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Subscription Emails Deletion History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {filteredHistory && filteredHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-neutral-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200">
+                            {Object.entries(
+                              filteredHistory.reduce((acc, entry) => {
+                                const email = entry?.senderEmail || 'unknown';
+                                if (!acc[email]) {
+                                  acc[email] = [];
+                                }
+                                acc[email].push(entry);
+                                return acc;
+                              }, {} as Record<string, DeletionHistory[]>)
+                            ).map(([sender, entries]) => {
+                              const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
+                              
+                              // Get the latest date
+                              const datesArray = entries
+                                .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
+                                .map(e => {
+                                  const dateVal = e.deletedAt!;
+                                  return typeof dateVal === 'string' 
+                                    ? new Date(dateVal).getTime() 
+                                    : dateVal instanceof Date 
+                                      ? dateVal.getTime() 
+                                      : new Date().getTime();
+                                });
+                                
+                              const latestDate = datesArray.length > 0
+                                ? new Date(Math.max(...datesArray))
+                                : new Date();
+                              
+                              return (
+                                <tr key={sender} className="hover:bg-neutral-50">
+                                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{totalCount} emails</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{latestDate.toLocaleDateString()}</td>
+                                  <td className="px-4 py-3 text-sm">
+                                    <a 
+                                      href={getGmailTrashLink(sender)} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      View in Gmail
+                                    </a>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No subscription emails have been deleted yet.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Additional tabs for other email types */}
+              <TabsContent value="promotions" className="mt-4">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Promotional Emails Deletion History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {filteredHistory && filteredHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-neutral-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200">
+                            {Object.entries(
+                              filteredHistory.reduce((acc, entry) => {
+                                const email = entry?.senderEmail || 'unknown';
+                                if (!acc[email]) {
+                                  acc[email] = [];
+                                }
+                                acc[email].push(entry);
+                                return acc;
+                              }, {} as Record<string, DeletionHistory[]>)
+                            ).map(([sender, entries]) => {
+                              const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
+                              
+                              // Get the latest date
+                              const datesArray = entries
+                                .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
+                                .map(e => {
+                                  const dateVal = e.deletedAt!;
+                                  return typeof dateVal === 'string' 
+                                    ? new Date(dateVal).getTime() 
+                                    : dateVal instanceof Date 
+                                      ? dateVal.getTime() 
+                                      : new Date().getTime();
+                                });
+                                
+                              const latestDate = datesArray.length > 0
+                                ? new Date(Math.max(...datesArray))
+                                : new Date();
+                              
+                              return (
+                                <tr key={sender} className="hover:bg-neutral-50">
+                                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{totalCount} emails</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{latestDate.toLocaleDateString()}</td>
+                                  <td className="px-4 py-3 text-sm">
+                                    <a 
+                                      href={getGmailTrashLink(sender)} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      View in Gmail
+                                    </a>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No promotional emails have been deleted yet.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="newsletters" className="mt-4">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Newsletter Emails Deletion History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {filteredHistory && filteredHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-neutral-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200">
+                            {Object.entries(
+                              filteredHistory.reduce((acc, entry) => {
+                                const email = entry?.senderEmail || 'unknown';
+                                if (!acc[email]) {
+                                  acc[email] = [];
+                                }
+                                acc[email].push(entry);
+                                return acc;
+                              }, {} as Record<string, DeletionHistory[]>)
+                            ).map(([sender, entries]) => {
+                              const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
+                              
+                              // Get the latest date
+                              const datesArray = entries
+                                .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
+                                .map(e => {
+                                  const dateVal = e.deletedAt!;
+                                  return typeof dateVal === 'string' 
+                                    ? new Date(dateVal).getTime() 
+                                    : dateVal instanceof Date 
+                                      ? dateVal.getTime() 
+                                      : new Date().getTime();
+                                });
+                                
+                              const latestDate = datesArray.length > 0
+                                ? new Date(Math.max(...datesArray))
+                                : new Date();
+                              
+                              return (
+                                <tr key={sender} className="hover:bg-neutral-50">
+                                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{totalCount} emails</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{latestDate.toLocaleDateString()}</td>
+                                  <td className="px-4 py-3 text-sm">
+                                    <a 
+                                      href={getGmailTrashLink(sender)} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      View in Gmail
+                                    </a>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No newsletter emails have been deleted yet.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="regular" className="mt-4">
+                <Card className="bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Regular Emails Deletion History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {filteredHistory && filteredHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-neutral-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Count</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200">
+                            {Object.entries(
+                              filteredHistory.reduce((acc, entry) => {
+                                const email = entry?.senderEmail || 'unknown';
+                                if (!acc[email]) {
+                                  acc[email] = [];
+                                }
+                                acc[email].push(entry);
+                                return acc;
+                              }, {} as Record<string, DeletionHistory[]>)
+                            ).map(([sender, entries]) => {
+                              const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
+                              
+                              // Get the latest date
+                              const datesArray = entries
+                                .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
+                                .map(e => {
+                                  const dateVal = e.deletedAt!;
+                                  return typeof dateVal === 'string' 
+                                    ? new Date(dateVal).getTime() 
+                                    : dateVal instanceof Date 
+                                      ? dateVal.getTime() 
+                                      : new Date().getTime();
+                                });
+                                
+                              const latestDate = datesArray.length > 0
+                                ? new Date(Math.max(...datesArray))
+                                : new Date();
+                              
+                              return (
+                                <tr key={sender} className="hover:bg-neutral-50">
+                                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{totalCount} emails</td>
+                                  <td className="px-4 py-3 text-sm text-gray-700">{latestDate.toLocaleDateString()}</td>
+                                  <td className="px-4 py-3 text-sm">
+                                    <a 
+                                      href={getGmailTrashLink(sender)} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      View in Gmail
+                                    </a>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No regular emails have been deleted yet.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </>
           )}
         </div>
