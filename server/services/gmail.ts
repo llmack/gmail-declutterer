@@ -1,6 +1,13 @@
 import { google } from 'googleapis';
 import { oAuth2Client, getAuthClientForUser } from './auth';
-import { Email, TemporaryCodeEmail } from '@shared/schema';
+import { 
+  Email, 
+  TemporaryCodeEmail, 
+  SubscriptionEmail, 
+  PromotionalEmail, 
+  NewsletterEmail, 
+  RegularEmail 
+} from '@/lib/types';
 
 export async function getProfile(accessToken: string) {
   const client = getAuthClientForUser(accessToken);

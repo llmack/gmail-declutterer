@@ -29,6 +29,29 @@ export interface TemporaryCodeEmail extends Email {
   daysAgo: number;
 }
 
+export interface SubscriptionEmail extends Email {
+  sender: string;
+  frequency?: 'daily' | 'weekly' | 'monthly';
+  daysAgo: number;
+}
+
+export interface PromotionalEmail extends Email {
+  sender: string;
+  promotionType?: 'deal' | 'coupon' | 'sale' | 'offer';
+  daysAgo: number;
+}
+
+export interface NewsletterEmail extends Email {
+  sender: string;
+  newsletterType?: 'news' | 'update' | 'digest' | 'alert';
+  daysAgo: number;
+}
+
+export interface RegularEmail extends Email {
+  sender: string;
+  daysAgo: number;
+}
+
 export interface EmailStats {
   totalEmails: number;
   storageUsed: string;
