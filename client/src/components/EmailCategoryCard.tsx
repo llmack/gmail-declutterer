@@ -148,7 +148,7 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
               onClick={handleCleanup}
               disabled={emails.length === 0 || isLoading}
             >
-              {isLoading ? 'Processing...' : 'Clean up'}
+              {isLoading ? 'Processing...' : 'Move to Trash'}
             </Button>
           </div>
         </CardFooter>

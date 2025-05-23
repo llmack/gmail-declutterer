@@ -69,7 +69,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
             </table>
           </div>
           
-          <Alert variant="warning" className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+          <Alert className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
             <AlertDescription className="flex items-start text-amber-800">
               <svg 
                 className="w-5 h-5 text-amber-500 mr-2 mt-0.5" 

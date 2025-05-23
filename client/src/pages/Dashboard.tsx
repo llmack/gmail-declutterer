@@ -12,6 +12,13 @@ import {
   useNewsletterEmails,
   useRegularEmails
 } from '@/hooks/useGmailAPI';
+import { 
+  TemporaryCodeEmail, 
+  SubscriptionEmail, 
+  PromotionalEmail, 
+  NewsletterEmail, 
+  RegularEmail 
+} from '@/lib/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LoadingState from '@/components/LoadingState';
@@ -94,6 +101,13 @@ const Dashboard: React.FC = () => {
   const trashEmailsMutation = useTrashEmails();
 
   const [dashboardLoaded, setDashboardLoaded] = useState(false);
+  
+  // State for locally managing emails after removal
+  const [localTempCodeEmails, setLocalTempCodeEmails] = useState<TemporaryCodeEmail[]>([]);
+  const [localSubscriptionEmails, setLocalSubscriptionEmails] = useState<SubscriptionEmail[]>([]);
+  const [localPromotionalEmails, setLocalPromotionalEmails] = useState<PromotionalEmail[]>([]);
+  const [localNewsletterEmails, setLocalNewsletterEmails] = useState<NewsletterEmail[]>([]);
+  const [localRegularEmails, setLocalRegularEmails] = useState<RegularEmail[]>([]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -158,6 +172,18 @@ const Dashboard: React.FC = () => {
         description: `${emailIds.length} emails have been moved to trash.`,
         variant: 'default',
       });
+      
+      // Refresh the data after cleanup
+      if (analysisStarted) {
+        Promise.all([
+          refetchProfile(), 
+          refetchTempCodes(),
+          refetchSubscriptions(),
+          refetchPromotions(),
+          refetchNewsletters(),
+          refetchRegularEmails()
+        ]);
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -166,6 +192,50 @@ const Dashboard: React.FC = () => {
       });
       console.error('Trash emails error:', error);
     }
+  };
+  
+  // Handle removing an email from the list without moving to trash
+  const handleRemoveFromList = (emailId: string, removeSender: boolean) => {
+    const updateEmailList = (list: any[] | undefined) => {
+      if (!list) return [];
+      
+      if (removeSender) {
+        // Find the email to get its sender
+        const email = list.find(e => e.id === emailId);
+        if (!email) return list;
+        
+        // Remove all emails from the same sender
+        return list.filter(e => e.sender !== email.sender);
+      } else {
+        // Remove just this email
+        return list.filter(e => e.id !== emailId);
+      }
+    };
+    
+    // Based on the active category, update the corresponding state
+    switch (activeCategory) {
+      case 'temp-codes':
+        setTempCodeEmails(updateEmailList(tempCodeEmails));
+        break;
+      case 'subscriptions':
+        setSubscriptionEmails(updateEmailList(subscriptionEmails));
+        break;
+      case 'promotions':
+        setPromotionalEmails(updateEmailList(promotionalEmails));
+        break;
+      case 'newsletters':
+        setNewsletterEmails(updateEmailList(newsletterEmails));
+        break;
+      case 'regular':
+        setRegularEmails(updateEmailList(regularEmails));
+        break;
+    }
+    
+    toast({
+      title: 'Email removed',
+      description: removeSender ? 'All emails from this sender have been removed from the list.' : 'Email has been removed from the list.',
+      variant: 'default',
+    });
   };
 
   const stats = calculateEmailStats(
