@@ -8,21 +8,33 @@ import Footer from '@/components/Footer';
 import LoadingState from '@/components/LoadingState';
 import StatsCard from '@/components/StatsCard';
 import EmailCategoryCard from '@/components/EmailCategoryCard';
+import { Button } from '@/components/ui/button';
 
 const Dashboard: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useGoogleAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // State to track if analysis was started manually
+  const [analysisStarted, setAnalysisStarted] = useState(false);
 
   const { 
     data: profile, 
     isLoading: profileLoading,
-  } = useGmailProfile();
+    refetch: refetchProfile,
+    isFetching: isProfileFetching,
+  } = useGmailProfile({
+    enabled: analysisStarted // Only fetch when analysis is started
+  });
   
   const { 
     data: tempCodeEmails,
     isLoading: tempCodesLoading,
-  } = useTemporaryCodeEmails();
+    refetch: refetchTempCodes,
+    isFetching: isTempCodesFetching,
+  } = useTemporaryCodeEmails({
+    enabled: analysisStarted // Only fetch when analysis is started
+  });
   
   const trashEmailsMutation = useTrashEmails();
 
@@ -34,18 +46,28 @@ const Dashboard: React.FC = () => {
     }
   }, [isAuthenticated, authLoading, setLocation]);
 
-  // Simulate loading state for demonstration purposes
-  useEffect(() => {
-    if (!profileLoading && !tempCodesLoading) {
-      const timer = setTimeout(() => {
-        setDashboardLoaded(true);
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [profileLoading, tempCodesLoading]);
+  // Start analysis function
+  const startAnalysis = async () => {
+    setAnalysisStarted(true);
+    toast({
+      title: 'Analysis Started',
+      description: 'Analyzing your Gmail inbox...',
+      variant: 'default',
+    });
+    
+    // Fetch the data
+    await Promise.all([refetchProfile(), refetchTempCodes()]);
+    
+    // Simulate loading state for better UX
+    setTimeout(() => {
+      setDashboardLoaded(true);
+    }, 1500);
+  };
 
-  const isLoading = authLoading || profileLoading || tempCodesLoading || !dashboardLoaded;
+  // Determine if we're loading
+  const isLoading = authLoading || 
+                   (analysisStarted && (profileLoading || tempCodesLoading || isProfileFetching || isTempCodesFetching)) || 
+                   (analysisStarted && !dashboardLoaded);
 
   const handleCleanup = async (emailIds: string[]) => {
     try {
@@ -74,7 +96,29 @@ const Dashboard: React.FC = () => {
       
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          {isLoading ? (
+          {!analysisStarted ? (
+            <div className="text-center py-16">
+              <h2 className="text-2xl font-medium text-gray-900 mb-4">Welcome to Gmail Declutter</h2>
+              <p className="text-gray-600 mb-8 max-w-lg mx-auto">
+                Click the button below to analyze your Gmail inbox and find emails that can be safely removed.
+              </p>
+              <Button 
+                size="lg" 
+                onClick={startAnalysis}
+                className="bg-[#4285F4] hover:bg-[#3367d6] text-white"
+              >
+                Start Email Analysis
+                <svg 
+                  className="ml-2 w-5 h-5" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Button>
+            </div>
+          ) : isLoading ? (
             <LoadingState />
           ) : (
             <div>

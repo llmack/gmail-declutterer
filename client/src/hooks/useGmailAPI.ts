@@ -2,16 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { TemporaryCodeEmail, GmailProfile, TrashEmailResponse } from '@/lib/types';
 
-export function useGmailProfile() {
+export function useGmailProfile(options = {}) {
   return useQuery<GmailProfile>({
     queryKey: ['/api/gmail/profile'],
+    enabled: false, // Don't fetch on component mount
+    ...options
   });
 }
 
-export function useTemporaryCodeEmails() {
+export function useTemporaryCodeEmails(options = {}) {
   return useQuery<TemporaryCodeEmail[]>({
     queryKey: ['/api/gmail/temp-codes'],
     refetchOnWindowFocus: false,
+    enabled: false, // Don't fetch on component mount
+    ...options
   });
 }
 
