@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LoadingState from '@/components/LoadingState';
 import { DeletionHistory } from '@shared/schema';
+import { toast } from '@/hooks/use-toast';
 
 // Use the DeletionHistory type from our schema
 type DeletionEntry = DeletionHistory & {

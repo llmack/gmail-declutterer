@@ -200,28 +200,40 @@ const Dashboard: React.FC = () => {
       // Determine which category we're cleaning up based on active category
       const currentCategory = activeCategory || 'unknown';
       
-      await trashEmailsMutation.mutateAsync({
+      console.log(`Moving ${emailIds.length} emails to trash from category ${category || currentCategory}`);
+      
+      const response = await trashEmailsMutation.mutateAsync({
         messageIds: emailIds,
         category: category || currentCategory, 
         senderInfo
       });
       
-      toast({
-        title: 'Success!',
-        description: `${emailIds.length} emails have been moved to trash.`,
-        variant: 'default',
-      });
+      console.log('Trash response:', response);
       
-      // Refresh the data after cleanup
-      if (analysisStarted) {
-        await Promise.all([
-          refetchProfile(), 
-          refetchTempCodes(),
-          refetchSubscriptions(),
-          refetchPromotions(),
-          refetchNewsletters(),
-          refetchRegularEmails()
-        ]);
+      if (response.success) {
+        toast({
+          title: 'Success!',
+          description: `${emailIds.length} emails have been moved to trash.`,
+          variant: 'default',
+        });
+        
+        // Refresh the data after cleanup
+        if (analysisStarted) {
+          await Promise.all([
+            refetchProfile(), 
+            refetchTempCodes(),
+            refetchSubscriptions(),
+            refetchPromotions(),
+            refetchNewsletters(),
+            refetchRegularEmails()
+          ]);
+        }
+      } else {
+        toast({
+          title: 'Warning',
+          description: 'Some emails could not be moved to trash. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({

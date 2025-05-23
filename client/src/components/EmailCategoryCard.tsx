@@ -40,8 +40,10 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
   const [removeSender, setRemoveSender] = useState(false);
   
   const handleCleanup = () => {
+    // Extract all email IDs and call the cleanup handler with the title (category)
     const emailIds = emails.map(email => email.id);
-    onCleanup(emailIds);
+    onCleanup(emailIds, title.toLowerCase());
+    setShowPreview(false);
   };
   
   const openRemoveDialog = (email: CategoryEmail) => {
