@@ -41,6 +41,14 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+
+// Handle client-side routing
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.resolve('client/index.html'));
+});
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
