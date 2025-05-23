@@ -18,12 +18,37 @@ type DeletionEntry = DeletionHistory & {
 
 const History: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [excludedSenders, setExcludedSenders] = useState<string[]>([]);
   
   // Use the proper queryFn to fetch deletion history
   const { data: deletionHistory, isLoading } = useQuery({
     queryKey: ['/api/history/deletions'],
     queryFn: getQueryFn<DeletionEntry[]>({ on401: 'throw' }),
   });
+  
+  // Load excluded senders from localStorage
+  useEffect(() => {
+    const storedExcludedSenders = localStorage.getItem('excludedSenders');
+    if (storedExcludedSenders) {
+      try {
+        setExcludedSenders(JSON.parse(storedExcludedSenders));
+      } catch (e) {
+        console.error('Error parsing stored excluded senders:', e);
+      }
+    }
+  }, []);
+  
+  // Function to remove a sender from the excluded list
+  const handleRemoveExclusion = (sender: string) => {
+    const updatedSenders = excludedSenders.filter(s => s !== sender);
+    setExcludedSenders(updatedSenders);
+    localStorage.setItem('excludedSenders', JSON.stringify(updatedSenders));
+    toast({
+      title: 'Sender Removed from Exclusion List',
+      description: `${sender} will no longer be excluded from cleanup.`,
+      variant: 'default',
+    });
+  };
   
   // Group deletion history by sender
   const groupedBySender = React.useMemo(() => {
@@ -130,6 +155,37 @@ const History: React.FC = () => {
                   </CardContent>
                 </Card>
               </div>
+              
+              {/* Excluded Senders Section */}
+              {excludedSenders.length > 0 && (
+                <Card className="bg-white shadow-sm mb-8">
+                  <CardHeader>
+                    <CardTitle>Excluded Senders</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4">
+                      These senders have been excluded from cleanup operations. Their emails will not be moved to trash.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {excludedSenders.map(sender => (
+                        <div key={sender} className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md border text-sm">
+                          {sender}
+                          <button 
+                            onClick={() => handleRemoveExclusion(sender)}
+                            className="ml-2 text-gray-500 hover:text-red-500"
+                            title="Remove from exclusion list"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               
               <Tabs defaultValue="all" className="mb-8" onValueChange={setActiveTab}>
                 <TabsList>

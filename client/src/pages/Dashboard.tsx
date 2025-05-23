@@ -249,7 +249,11 @@ const Dashboard: React.FC = () => {
   const handleExcludeSender = (sender: string, shouldExclude: boolean) => {
     if (shouldExclude) {
       // Add sender to excluded list
-      setExcludedSenders(prev => [...prev, sender]);
+      const newExcludedSenders = [...excludedSenders, sender];
+      setExcludedSenders(newExcludedSenders);
+      // Store in localStorage for persistence
+      localStorage.setItem('excludedSenders', JSON.stringify(newExcludedSenders));
+      
       toast({
         title: 'Sender Excluded',
         description: `Emails from "${sender}" will be excluded from cleanup.`,
@@ -257,7 +261,10 @@ const Dashboard: React.FC = () => {
       });
     } else {
       // Remove sender from excluded list
-      setExcludedSenders(prev => prev.filter(s => s !== sender));
+      const newExcludedSenders = excludedSenders.filter(s => s !== sender);
+      setExcludedSenders(newExcludedSenders);
+      localStorage.setItem('excludedSenders', JSON.stringify(newExcludedSenders));
+      
       toast({
         title: 'Sender Included',
         description: `Emails from "${sender}" will be included in cleanup.`,
@@ -265,6 +272,18 @@ const Dashboard: React.FC = () => {
       });
     }
   };
+  
+  // Load excluded senders from localStorage on initial load
+  useEffect(() => {
+    const storedExcludedSenders = localStorage.getItem('excludedSenders');
+    if (storedExcludedSenders) {
+      try {
+        setExcludedSenders(JSON.parse(storedExcludedSenders));
+      } catch (e) {
+        console.error('Error parsing stored excluded senders:', e);
+      }
+    }
+  }, []);
 
   const stats = calculateEmailStats(
     profile, 
