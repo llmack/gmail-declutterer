@@ -464,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/gmail/trash', isAuthenticated, async (req, res) => {
     try {
-      const { messageIds } = req.body;
+      const { messageIds, category, senderInfo } = req.body;
       
       if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
         return res.status(400).json({ message: 'Message IDs are required' });
@@ -472,18 +472,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const results = await batchMoveToTrash(req.session.accessToken!, messageIds);
       
-      // Record deletion in history
+      // Record deletion in history with sender information for better tracking
       await storage.createDeletionHistory({
         userId: req.session.userId!,
-        categoryType: 'temporary_code',
+        categoryType: category || 'unknown',
         count: messageIds.length,
-        emailIds: messageIds
+        emailIds: messageIds,
+        senderEmail: senderInfo?.email || 'unknown',
+        senderName: senderInfo?.name || 'unknown'
       });
       
       res.json({ success: true, results });
     } catch (error) {
       console.error('Error moving messages to trash:', error);
       res.status(500).json({ message: 'Failed to move messages to trash', error: (error as Error).message });
+    }
+  });
+  
+  // Add endpoint to retrieve deletion history
+  app.get('/api/history/deletions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const deletionHistory = await storage.getDeletionHistory(userId);
+      
+      res.json(deletionHistory);
+    } catch (error) {
+      console.error('Error fetching deletion history:', error);
+      res.status(500).json({ message: 'Failed to fetch deletion history', error: (error as Error).message });
     }
   });
 

@@ -187,9 +187,16 @@ const Dashboard: React.FC = () => {
   };
   
   // Handle deleting emails by moving them to trash
-  const handleCleanup = async (emailIds: string[]) => {
+  const handleCleanup = async (emailIds: string[], category?: string, senderInfo?: {email: string, name: string}) => {
     try {
-      await trashEmailsMutation.mutateAsync(emailIds);
+      // Determine which category we're cleaning up based on active category
+      const currentCategory = activeCategory || 'unknown';
+      
+      await trashEmailsMutation.mutateAsync({
+        messageIds: emailIds,
+        category: category || currentCategory, 
+        senderInfo
+      });
       
       toast({
         title: 'Success!',

@@ -117,7 +117,11 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                         className="h-8 text-white bg-red-500 hover:bg-red-600 flex items-center"
                         onClick={() => {
                           const ids = (senderEmails as any[]).map(e => e.id);
-                          onCleanup(ids);
+                          // Pass sender information for tracking in deletion history
+                          onCleanup(ids, title.toLowerCase(), {
+                            email: sender,
+                            name: sender
+                          });
                         }}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -37,6 +37,8 @@ export const deletionHistory = pgTable("deletion_history", {
   categoryType: text("category_type").notNull(),
   count: integer("count").notNull(),
   emailIds: text("email_ids").array(),
+  senderEmail: text("sender_email").default("unknown"),
+  senderName: text("sender_name").default("unknown"),
   deletedAt: timestamp("deleted_at").defaultNow(),
 });
 
