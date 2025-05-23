@@ -6,7 +6,7 @@ import { storage } from '../storage';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 // Use environment variable for redirect URI with Replit domain
-const REDIRECT_URI = process.env.REDIRECT_URI || 'https://gmail-declutterer-thelindsaymack.replit.app/api/auth/callback';
+const REDIRECT_URI = process.env.REDIRECT_URI || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/auth/callback`;
 
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   console.warn('Google OAuth credentials not set. Authentication will not work properly.');
