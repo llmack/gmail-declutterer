@@ -11,10 +11,10 @@ const Home: React.FC = () => {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
+    if (!isLoading && isAuthenticated) {
       setLocation('/dashboard');
     }
-  }, [isAuthenticated, isLoading, setLocation]);
+  }, [isLoading, isAuthenticated, setLocation]);
 
   return (
     <div className="min-h-screen flex flex-col">
