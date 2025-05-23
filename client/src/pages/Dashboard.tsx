@@ -225,15 +225,72 @@ const Dashboard: React.FC = () => {
     }
   };
   
-  // Handle removing emails from a specific sender
-  const handleRemoveBySender = (sender) => {
-    // Implementation will vary based on which category is active
-    // For now, we'll just show a message
-    toast({
-      title: 'Sender Removed',
-      description: `All emails from ${sender} have been removed from the list.`,
-      variant: 'default',
-    });
+  // Handle removing emails from a specific sender from the cleanup list
+  const handleRemoveBySender = (sender: string) => {
+    // Implementation based on which category is active
+    switch (activeCategory) {
+      case 'temp-codes':
+        if (tempCodeEmails) {
+          const filteredEmails = tempCodeEmails.filter(email => email.sender !== sender);
+          setLocalTempCodeEmails(filteredEmails);
+          toast({
+            title: 'Sender Removed',
+            description: `Emails from ${sender} won't be included in cleanup.`,
+            variant: 'default',
+          });
+        }
+        break;
+      case 'subscriptions':
+        if (subscriptionEmails) {
+          const filteredEmails = subscriptionEmails.filter(email => email.sender !== sender);
+          setLocalSubscriptionEmails(filteredEmails);
+          toast({
+            title: 'Sender Removed',
+            description: `Emails from ${sender} won't be included in cleanup.`,
+            variant: 'default',
+          });
+        }
+        break;
+      case 'promotions':
+        if (promotionalEmails) {
+          const filteredEmails = promotionalEmails.filter(email => email.sender !== sender);
+          setLocalPromotionalEmails(filteredEmails);
+          toast({
+            title: 'Sender Removed',
+            description: `Emails from ${sender} won't be included in cleanup.`,
+            variant: 'default',
+          });
+        }
+        break;
+      case 'newsletters':
+        if (newsletterEmails) {
+          const filteredEmails = newsletterEmails.filter(email => email.sender !== sender);
+          setLocalNewsletterEmails(filteredEmails);
+          toast({
+            title: 'Sender Removed',
+            description: `Emails from ${sender} won't be included in cleanup.`,
+            variant: 'default',
+          });
+        }
+        break;
+      case 'regular':
+        if (regularEmails) {
+          const filteredEmails = regularEmails.filter(email => email.sender !== sender);
+          setLocalRegularEmails(filteredEmails);
+          toast({
+            title: 'Sender Removed',
+            description: `Emails from ${sender} won't be included in cleanup.`,
+            variant: 'default',
+          });
+        }
+        break;
+      default:
+        toast({
+          title: 'Sender Removed',
+          description: `Emails from ${sender} won't be included in cleanup.`,
+          variant: 'default',
+        });
+    }
   };
 
   const stats = calculateEmailStats(

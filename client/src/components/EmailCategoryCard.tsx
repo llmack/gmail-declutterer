@@ -98,7 +98,7 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                     acc[email.sender].push(email);
                     return acc;
                   }, {})
-                ).slice(0, 3).map(([sender, senderEmails]) => (
+                ).map(([sender, senderEmails]) => (
                   <tr key={sender} className="hover:bg-neutral-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">
@@ -136,10 +136,8 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                           size="sm" 
                           className="h-8 text-gray-700 border-gray-300 hover:bg-gray-100 flex items-center"
                           onClick={() => {
-                            if (senderEmails.length > 0) {
-                              // Remove all emails from this sender from the list
-                              onRemoveFromList((senderEmails as any[])[0].id, true);
-                            }
+                            // Pass the sender info to the remove handler
+                            onRemoveFromList && onRemoveFromList(sender, true);
                           }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
