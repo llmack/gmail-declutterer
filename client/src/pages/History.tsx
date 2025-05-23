@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest, getQueryFn } from '@/lib/queryClient';
+import { getQueryFn } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
@@ -11,19 +11,15 @@ import LoadingState from '@/components/LoadingState';
 import { DeletionHistory } from '@shared/schema';
 import { toast } from '@/hooks/use-toast';
 
-// Use the DeletionHistory type from our schema
-type DeletionEntry = DeletionHistory & {
-  category: string; // For UI display purposes
-}
-
+// Simple history page that shows deletion records
 const History: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [excludedSenders, setExcludedSenders] = useState<string[]>([]);
   
-  // Use the proper queryFn to fetch deletion history
+  // Fetch deletion history from the server
   const { data: deletionHistory, isLoading } = useQuery({
     queryKey: ['/api/history/deletions'],
-    queryFn: getQueryFn<DeletionEntry[]>({ on401: 'throw' }),
+    queryFn: getQueryFn<DeletionHistory[]>({ on401: 'throw' }),
   });
   
   // Load excluded senders from localStorage
@@ -50,27 +46,13 @@ const History: React.FC = () => {
     });
   };
   
-  // Group deletion history by sender
-  const groupedBySender = React.useMemo(() => {
-    if (!deletionHistory) return {} as Record<string, DeletionEntry[]>;
-    
-    return deletionHistory.reduce<Record<string, DeletionEntry[]>>((acc, entry) => {
-      // Use senderEmail for grouping
-      const senderKey = entry.senderEmail || 'unknown';
-      if (!acc[senderKey]) {
-        acc[senderKey] = [];
-      }
-      acc[senderKey].push(entry);
-      return acc;
-    }, {});
-  }, [deletionHistory]);
-  
   // Function to create a Gmail search URL to view trashed emails from a sender
   const getGmailTrashLink = (sender: string) => {
     const encodedSender = encodeURIComponent(`from:${sender}`);
     return `https://mail.google.com/mail/u/0/#search/in%3Atrash+${encodedSender}`;
   };
   
+  // Calculate total deleted emails
   const getTotalEmailsDeleted = () => {
     if (!deletionHistory) return 0;
     return deletionHistory.reduce((total, entry) => total + entry.count, 0);
@@ -80,19 +62,35 @@ const History: React.FC = () => {
   const getTotalStorageSaved = () => {
     if (!deletionHistory) return 0;
     
-    // Estimate based on average email size (100KB per email as a conservative estimate)
     const totalEmails = getTotalEmailsDeleted();
     const averageEmailSizeKB = 100; // 100KB average size
     const totalSavedKB = totalEmails * averageEmailSizeKB;
     
-    // Convert to MB for display
     return (totalSavedKB / 1024).toFixed(2);
   };
+  
+  // Group deletion history by sender
+  const groupedBySender = React.useMemo(() => {
+    if (!deletionHistory) return {};
+    
+    return deletionHistory.reduce((acc, entry) => {
+      const senderKey = entry.senderEmail || 'unknown';
+      if (!acc[senderKey]) {
+        acc[senderKey] = [];
+      }
+      acc[senderKey].push(entry);
+      return acc;
+    }, {} as Record<string, DeletionHistory[]>);
+  }, [deletionHistory]);
   
   // Filter by category if a specific tab is selected
   const filteredHistory = React.useMemo(() => {
     if (activeTab === 'all' || !deletionHistory) return deletionHistory || [];
-    return (deletionHistory || []).filter(entry => entry.categoryType.toLowerCase() === activeTab);
+    return (deletionHistory || []).filter(entry => {
+      const category = entry.categoryType.toLowerCase();
+      return category === activeTab || 
+             (activeTab === 'temporary' && category === 'temporary_code');
+    });
   }, [deletionHistory, activeTab]);
 
   return (
@@ -112,7 +110,7 @@ const History: React.FC = () => {
             <LoadingState />
           ) : (
             <>
-              <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-white shadow-sm">
                   <CardContent className="p-6">
                     <div className="flex flex-col">
@@ -138,19 +136,6 @@ const History: React.FC = () => {
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-600">Senders Affected</span>
                       <span className="text-3xl font-bold text-gray-900">{Object.keys(groupedBySender).length}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-white shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-600">Last Cleanup</span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {deletionHistory && deletionHistory.length > 0 && deletionHistory[0].deletedAt
-                          ? formatDate(deletionHistory[0].deletedAt.toString())
-                          : 'No cleanups yet'}
-                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -218,19 +203,23 @@ const History: React.FC = () => {
                             <tbody className="divide-y divide-neutral-200">
                               {Object.entries(groupedBySender).map(([sender, entries]) => {
                                 // Calculate total deleted emails for this sender
-                                const totalCount = (entries as DeletionHistory[]).reduce((sum, entry) => sum + entry.count, 0);
+                                const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
                                 
                                 // Calculate storage saved for this sender (using 100KB per email as estimate)
                                 const storageSavedKB = totalCount * 100; // 100KB per email
                                 const storageSavedMB = (storageSavedKB / 1024).toFixed(1);
                                 
                                 // Find the latest deletion date
-                                const latestDate = new Date(Math.max(
-                                  ...(entries as DeletionHistory[]).map(e => new Date(e.deletedAt).getTime())
-                                ));
+                                const latestDate = entries && entries.length > 0 
+                                  ? new Date(Math.max(
+                                      ...entries
+                                        .filter(e => e && e.deletedAt)
+                                        .map(e => new Date(e.deletedAt).getTime())
+                                    ))
+                                  : new Date();
                                 
                                 // Get categories for this sender's deletions
-                                const categories = Array.from(new Set((entries as DeletionHistory[]).map(e => e.categoryType)))
+                                const categories = Array.from(new Set(entries.map(e => e.categoryType)))
                                   .map(cat => {
                                     // Make category names more readable
                                     switch(cat) {
@@ -280,7 +269,6 @@ const History: React.FC = () => {
                   </Card>
                 </TabsContent>
                 
-                {/* Category-specific tabs would have similar content with filtered data */}
                 {['temporary', 'subscriptions', 'promotions', 'newsletters', 'regular'].map(category => (
                   <TabsContent key={category} value={category} className="mt-4">
                     <Card className="bg-white shadow-sm">
@@ -302,25 +290,32 @@ const History: React.FC = () => {
                               <tbody className="divide-y divide-neutral-200">
                                 {Object.entries(
                                   filteredHistory.reduce((acc, entry) => {
-                                    if (!acc[entry.senderEmail]) {
-                                      acc[entry.senderEmail] = [];
+                                    const email = entry?.senderEmail || 'unknown';
+                                    if (!acc[email]) {
+                                      acc[email] = [];
                                     }
-                                    acc[entry.senderEmail].push(entry);
+                                    acc[email].push(entry);
                                     return acc;
-                                  }, {} as Record<string, DeletionEntry[]>)
+                                  }, {} as Record<string, DeletionHistory[]>)
                                 ).map(([sender, entries]) => {
                                   const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
-                                  const latestDate = new Date(Math.max(
-                                    ...entries.map(e => new Date(e.timestamp).getTime())
-                                  ));
+                                  
+                                  // Get the latest date
+                                  const datesArray = entries
+                                    .filter(e => e?.deletedAt)
+                                    .map(e => new Date(e.deletedAt).getTime());
+                                    
+                                  const latestDate = datesArray.length > 0
+                                    ? new Date(Math.max(...datesArray))
+                                    : new Date();
                                   
                                   return (
                                     <tr key={sender} className="hover:bg-neutral-50">
                                       <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
-                                      <td className="px-4 py-3 text-sm text-gray-600">{totalCount}</td>
-                                      <td className="px-4 py-3 text-sm text-gray-600">{formatDate(latestDate.toISOString())}</td>
+                                      <td className="px-4 py-3 text-sm text-gray-700">{totalCount}</td>
+                                      <td className="px-4 py-3 text-sm text-gray-700">{formatDate(latestDate.toISOString())}</td>
                                       <td className="px-4 py-3 text-sm">
-                                        <Button 
+                                        <Button
                                           size="sm"
                                           variant="outline"
                                           onClick={() => window.open(getGmailTrashLink(sender), '_blank')}

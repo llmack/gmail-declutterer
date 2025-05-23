@@ -28,6 +28,8 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 
 const Dashboard: React.FC = () => {
+  // Create a ref for the dashboard element
+  const dashboardRef = React.useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useGoogleAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -284,6 +286,26 @@ const Dashboard: React.FC = () => {
         console.error('Error parsing stored excluded senders:', e);
       }
     }
+  }, []);
+  
+  // Set up event listener for the "set-overview" event from header
+  useEffect(() => {
+    const dashboardElement = dashboardRef.current;
+    
+    const handleSetOverview = () => {
+      setActiveCategory('overview');
+    };
+    
+    if (dashboardElement) {
+      dashboardElement.id = 'dashboard-component';
+      dashboardElement.addEventListener('set-overview', handleSetOverview);
+    }
+    
+    return () => {
+      if (dashboardElement) {
+        dashboardElement.removeEventListener('set-overview', handleSetOverview);
+      }
+    };
   }, []);
 
   const stats = calculateEmailStats(
@@ -653,7 +675,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" ref={dashboardRef}>
       <Header />
       
       <main className="flex-1">
