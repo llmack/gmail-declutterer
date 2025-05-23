@@ -19,15 +19,16 @@ export async function getProfile(accessToken: string) {
   return response.data;
 }
 
-export async function listMessages(accessToken: string, query: string = '', maxResults: number = 100, orderBy: 'internalDate' | undefined = 'internalDate') {
+export async function listMessages(accessToken: string, query: string = '', maxResults: number = 100) {
   const client = getAuthClientForUser(accessToken);
   const gmail = google.gmail({ version: 'v1', auth: client });
   
+  // Note: Gmail API doesn't directly support sorting by date in the API
+  // We'll sort the results after fetching them
   const response = await gmail.users.messages.list({
     userId: 'me',
-    q: query,
+    q: query + ' -in:trash', // Exclude items in trash
     maxResults,
-    orderBy, // Sort by date, with oldest first
   });
   
   return response.data.messages || [];
@@ -52,7 +53,8 @@ export async function getTemporaryCodeEmails(accessToken: string): Promise<Tempo
   const query = 'subject:(verification OR code OR otp OR "security code" OR "confirmation code")';
   
   try {
-    const messages = await listMessages(accessToken, query, 20);
+    // Increased limit to get more emails
+    const messages = await listMessages(accessToken, query, 100);
     
     if (!messages.length) {
       return [];
