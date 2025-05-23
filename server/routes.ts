@@ -60,8 +60,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.session.refreshToken = user.refreshToken;
       }
       
-      // Redirect to frontend
-      res.redirect('/');
+      // Redirect to frontend with absolute path to ensure proper domain
+      const hostname = req.get('host');
+      const protocol = req.protocol;
+      res.redirect(`${protocol}://${hostname}/dashboard`);
     } catch (error) {
       console.error('Auth callback error:', error);
       res.status(500).json({ message: 'Authentication failed', error: (error as Error).message });
