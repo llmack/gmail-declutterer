@@ -129,15 +129,43 @@ export async function getTemporaryCodeEmails(accessToken: string): Promise<Tempo
 }
 
 export async function moveMessageToTrash(accessToken: string, messageId: string) {
-  const client = getAuthClientForUser(accessToken);
-  const gmail = google.gmail({ version: 'v1', auth: client });
-  
-  const response = await gmail.users.messages.trash({
-    userId: 'me',
-    id: messageId,
-  });
-  
-  return response.data;
+  try {
+    // Create authenticated client
+    const client = getAuthClientForUser(accessToken);
+    const gmail = google.gmail({ version: 'v1', auth: client });
+    
+    console.log(`Gmail API: Moving message ${messageId} to trash`);
+    
+    // First try the trash endpoint
+    try {
+      const response = await gmail.users.messages.trash({
+        userId: 'me',
+        id: messageId,
+      });
+      
+      console.log(`Successfully moved message ${messageId} to trash`);
+      return response.data;
+    } catch (trashError) {
+      console.error(`Error using trash endpoint for ${messageId}:`, trashError);
+      
+      // If trash fails, try modify with TRASH label
+      console.log(`Falling back to modify endpoint for message ${messageId}`);
+      const modifyResponse = await gmail.users.messages.modify({
+        userId: 'me',
+        id: messageId,
+        requestBody: {
+          addLabelIds: ['TRASH'],
+          removeLabelIds: ['INBOX']
+        }
+      });
+      
+      console.log(`Successfully modified message ${messageId} with TRASH label`);
+      return modifyResponse.data;
+    }
+  } catch (error) {
+    console.error(`Failed to move message ${messageId} to trash:`, error);
+    throw error;
+  }
 }
 
 export async function batchMoveToTrash(accessToken: string, messageIds: string[]) {
