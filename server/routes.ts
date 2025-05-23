@@ -465,13 +465,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/gmail/trash', isAuthenticated, async (req, res) => {
     try {
+      console.log('Received trash request with body:', JSON.stringify(req.body));
       const { messageIds, category, senderInfo } = req.body;
       
       if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
+        console.log('Invalid request - messageIds missing or empty');
         return res.status(400).json({ message: 'Message IDs are required' });
       }
       
-      console.log(`Attempting to move ${messageIds.length} emails to trash`);
+      console.log(`Attempting to move ${messageIds.length} emails to trash from category ${category || 'unknown'}`);
+      console.log('Using access token:', req.session.accessToken ? 'Valid token present' : 'No token');
       
       // Process messages individually and collect results
       const allResults = [];
@@ -479,7 +482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const messageId of messageIds) {
         try {
+          console.log(`Trashing message ID: ${messageId}`);
           const result = await moveMessageToTrash(req.session.accessToken!, messageId);
+          console.log(`Successfully trashed message: ${messageId}`);
           allResults.push({ messageId, success: true, data: result });
           successCount++;
         } catch (error) {
@@ -493,9 +498,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const success = successCount > 0;
+      console.log(`Trash operation completed: ${successCount} of ${messageIds.length} emails trashed successfully`);
       
       // Only record history if at least one email was successfully moved
       if (success) {
+        console.log('Recording deletion in history');
         // Record deletion in history with sender information for better tracking
         await storage.createDeletionHistory({
           userId: req.session.userId!,
@@ -507,6 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      console.log('Sending response:', { success, resultCount: allResults.length });
       res.json({ success, results: allResults });
     } catch (error) {
       console.error('Error moving messages to trash:', error);

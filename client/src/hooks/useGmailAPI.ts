@@ -68,21 +68,26 @@ export function useRegularEmails(options = {}) {
 export function useTrashEmails() {
   const queryClient = useQueryClient();
   
-  return useMutation<TrashEmailResponse, Error, { 
-    messageIds: string[]; 
-    category?: string;
-    senderInfo?: { email: string; name: string };
-  }>({
-    mutationFn: async (data) => {
+  return useMutation({
+    mutationFn: async (data: { 
+      messageIds: string[]; 
+      category?: string;
+      senderInfo?: { email: string; name: string };
+    }) => {
       console.log('Trashing emails:', data);
-      const result = await apiRequest<TrashEmailResponse>('/api/gmail/trash', {
+      const response = await fetch('/api/gmail/trash', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json'
         }
       });
-      return result;
+      
+      if (!response.ok) {
+        throw new Error(`Failed to trash emails: ${response.statusText}`);
+      }
+      
+      return response.json() as Promise<TrashEmailResponse>;
     },
     onSuccess: () => {
       // Invalidate all Gmail data queries
