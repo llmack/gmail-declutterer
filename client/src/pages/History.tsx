@@ -291,12 +291,20 @@ const History: React.FC = () => {
                                 const storageSavedMB = (storageSavedKB / 1024).toFixed(1);
                                 
                                 // Find the latest deletion date
-                                const latestDate = entries && entries.length > 0 
-                                  ? new Date(Math.max(
-                                      ...entries
-                                        .filter(e => e && e.deletedAt)
-                                        .map(e => new Date(e.deletedAt).getTime())
-                                    ))
+                                const validEntries = entries.filter(e => e && e.deletedAt);
+                                const latestDate = validEntries.length > 0 
+                                  ? new Date(
+                                      Math.max(
+                                        ...validEntries.map(e => {
+                                          const dateVal = e.deletedAt;
+                                          return typeof dateVal === 'string' 
+                                            ? new Date(dateVal).getTime() 
+                                            : dateVal instanceof Date 
+                                              ? dateVal.getTime() 
+                                              : new Date().getTime();
+                                        })
+                                      )
+                                    )
                                   : new Date();
                                 
                                 // Get categories for this sender's deletions
@@ -383,8 +391,15 @@ const History: React.FC = () => {
                                   
                                   // Get the latest date
                                   const datesArray = entries
-                                    .filter(e => e?.deletedAt)
-                                    .map(e => new Date(e.deletedAt).getTime());
+                                    .filter(e => e?.deletedAt !== null && e?.deletedAt !== undefined)
+                                    .map(e => {
+                                      const dateVal = e.deletedAt!; // We've filtered out null/undefined values
+                                      return typeof dateVal === 'string' 
+                                        ? new Date(dateVal).getTime() 
+                                        : dateVal instanceof Date 
+                                          ? dateVal.getTime() 
+                                          : new Date().getTime();
+                                    });
                                     
                                   const latestDate = datesArray.length > 0
                                     ? new Date(Math.max(...datesArray))
