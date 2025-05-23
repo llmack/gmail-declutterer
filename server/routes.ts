@@ -4,7 +4,14 @@ import session from 'express-session';
 import MemoryStore from 'memorystore';
 import { storage } from "./storage";
 import { generateAuthUrl, handleGoogleCallback, isAuthenticated } from "./services/auth";
-import { getProfile, getTemporaryCodeEmails, batchMoveToTrash } from "./services/gmail";
+import { 
+  getProfile, 
+  getTemporaryCodeEmails, 
+  batchMoveToTrash,
+  listMessages,
+  getMessage,
+  parseSenderName
+} from "./services/gmail";
 
 // Define custom session type
 declare module 'express-session' {
@@ -150,6 +157,308 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching temporary code emails:', error);
       res.status(500).json({ message: 'Failed to fetch temporary code emails', error: (error as Error).message });
+    }
+  });
+
+  // New endpoints for additional email categories
+  app.get('/api/gmail/subscriptions', isAuthenticated, async (req, res) => {
+    try {
+      // Query for subscription-like emails
+      const query = 'subject:(newsletter OR subscription OR update OR weekly OR monthly OR daily)';
+      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const subscriptionEmails = [];
+      
+      for (const message of messages) {
+        try {
+          const fullMessage = await getMessage(req.session.accessToken!, message.id!);
+          
+          const headers = fullMessage.payload?.headers || [];
+          const fromHeader = headers.find(h => h.name?.toLowerCase() === 'from');
+          const subjectHeader = headers.find(h => h.name?.toLowerCase() === 'subject');
+          const dateHeader = headers.find(h => h.name?.toLowerCase() === 'date');
+          
+          if (!fromHeader || !subjectHeader || !dateHeader) continue;
+          
+          const sender = fromHeader.value || '';
+          const subject = subjectHeader.value || '';
+          const dateStr = dateHeader.value || '';
+          const date = new Date(dateStr);
+          const now = new Date();
+          const diffTime = Math.abs(now.getTime() - date.getTime());
+          const daysAgo = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          // Determine frequency based on subject patterns
+          let frequency: 'daily' | 'weekly' | 'monthly' = 'monthly';
+          const subjectLower = subject.toLowerCase();
+          
+          if (subjectLower.includes('daily') || subjectLower.includes('today')) {
+            frequency = 'daily';
+          } else if (subjectLower.includes('weekly') || subjectLower.includes('week')) {
+            frequency = 'weekly';
+          }
+          
+          subscriptionEmails.push({
+            id: fullMessage.id!,
+            sender: parseSenderName(sender),
+            subject,
+            snippet: fullMessage.snippet || '',
+            date: date.toISOString(),
+            labelIds: fullMessage.labelIds || [],
+            sizeEstimate: fullMessage.sizeEstimate || 0,
+            frequency,
+            daysAgo,
+          });
+        } catch (err) {
+          console.error(`Error processing message ${message.id}:`, err);
+        }
+      }
+      
+      // Store the results in email category
+      const userId = req.session.userId!;
+      const existingCategory = await storage.getEmailCategoryByType(userId, 'subscription');
+      
+      if (existingCategory) {
+        await storage.updateEmailCategory(existingCategory.id, {
+          count: subscriptionEmails.length,
+          sampleEmails: subscriptionEmails.slice(0, 10)
+        });
+      } else {
+        await storage.createEmailCategory({
+          userId,
+          categoryType: 'subscription',
+          count: subscriptionEmails.length,
+          sampleEmails: subscriptionEmails.slice(0, 10)
+        });
+      }
+      
+      res.json(subscriptionEmails);
+    } catch (error) {
+      console.error('Error fetching subscription emails:', error);
+      res.status(500).json({ message: 'Failed to fetch subscription emails', error: (error as Error).message });
+    }
+  });
+  
+  app.get('/api/gmail/promotions', isAuthenticated, async (req, res) => {
+    try {
+      // Query for promotional emails
+      const query = 'subject:(discount OR sale OR offer OR % OR deal OR promotion OR coupon)';
+      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const promotionalEmails = [];
+      
+      for (const message of messages) {
+        try {
+          const fullMessage = await getMessage(req.session.accessToken!, message.id!);
+          
+          const headers = fullMessage.payload?.headers || [];
+          const fromHeader = headers.find(h => h.name?.toLowerCase() === 'from');
+          const subjectHeader = headers.find(h => h.name?.toLowerCase() === 'subject');
+          const dateHeader = headers.find(h => h.name?.toLowerCase() === 'date');
+          
+          if (!fromHeader || !subjectHeader || !dateHeader) continue;
+          
+          const sender = fromHeader.value || '';
+          const subject = subjectHeader.value || '';
+          const dateStr = dateHeader.value || '';
+          const date = new Date(dateStr);
+          const now = new Date();
+          const diffTime = Math.abs(now.getTime() - date.getTime());
+          const daysAgo = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          // Determine promotion type based on subject
+          let promotionType: 'deal' | 'coupon' | 'sale' | 'offer' = 'offer';
+          const subjectLower = subject.toLowerCase();
+          
+          if (subjectLower.includes('deal')) {
+            promotionType = 'deal';
+          } else if (subjectLower.includes('coupon') || subjectLower.includes('code')) {
+            promotionType = 'coupon';
+          } else if (subjectLower.includes('sale')) {
+            promotionType = 'sale';
+          }
+          
+          promotionalEmails.push({
+            id: fullMessage.id!,
+            sender: parseSenderName(sender),
+            subject,
+            snippet: fullMessage.snippet || '',
+            date: date.toISOString(),
+            labelIds: fullMessage.labelIds || [],
+            sizeEstimate: fullMessage.sizeEstimate || 0,
+            promotionType,
+            daysAgo,
+          });
+        } catch (err) {
+          console.error(`Error processing message ${message.id}:`, err);
+        }
+      }
+      
+      // Store the results in email category
+      const userId = req.session.userId!;
+      const existingCategory = await storage.getEmailCategoryByType(userId, 'promotional');
+      
+      if (existingCategory) {
+        await storage.updateEmailCategory(existingCategory.id, {
+          count: promotionalEmails.length,
+          sampleEmails: promotionalEmails.slice(0, 10)
+        });
+      } else {
+        await storage.createEmailCategory({
+          userId,
+          categoryType: 'promotional',
+          count: promotionalEmails.length,
+          sampleEmails: promotionalEmails.slice(0, 10)
+        });
+      }
+      
+      res.json(promotionalEmails);
+    } catch (error) {
+      console.error('Error fetching promotional emails:', error);
+      res.status(500).json({ message: 'Failed to fetch promotional emails', error: (error as Error).message });
+    }
+  });
+  
+  app.get('/api/gmail/newsletters', isAuthenticated, async (req, res) => {
+    try {
+      // Query for newsletter-type emails
+      const query = 'subject:(newsletter OR digest OR news OR update OR alert)';
+      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const newsletterEmails = [];
+      
+      for (const message of messages) {
+        try {
+          const fullMessage = await getMessage(req.session.accessToken!, message.id!);
+          
+          const headers = fullMessage.payload?.headers || [];
+          const fromHeader = headers.find(h => h.name?.toLowerCase() === 'from');
+          const subjectHeader = headers.find(h => h.name?.toLowerCase() === 'subject');
+          const dateHeader = headers.find(h => h.name?.toLowerCase() === 'date');
+          
+          if (!fromHeader || !subjectHeader || !dateHeader) continue;
+          
+          const sender = fromHeader.value || '';
+          const subject = subjectHeader.value || '';
+          const dateStr = dateHeader.value || '';
+          const date = new Date(dateStr);
+          const now = new Date();
+          const diffTime = Math.abs(now.getTime() - date.getTime());
+          const daysAgo = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          // Determine newsletter type based on subject
+          let newsletterType: 'news' | 'update' | 'digest' | 'alert' = 'news';
+          const subjectLower = subject.toLowerCase();
+          
+          if (subjectLower.includes('update')) {
+            newsletterType = 'update';
+          } else if (subjectLower.includes('digest')) {
+            newsletterType = 'digest';
+          } else if (subjectLower.includes('alert')) {
+            newsletterType = 'alert';
+          }
+          
+          newsletterEmails.push({
+            id: fullMessage.id!,
+            sender: parseSenderName(sender),
+            subject,
+            snippet: fullMessage.snippet || '',
+            date: date.toISOString(),
+            labelIds: fullMessage.labelIds || [],
+            sizeEstimate: fullMessage.sizeEstimate || 0,
+            newsletterType,
+            daysAgo,
+          });
+        } catch (err) {
+          console.error(`Error processing message ${message.id}:`, err);
+        }
+      }
+      
+      // Store the results in email category
+      const userId = req.session.userId!;
+      const existingCategory = await storage.getEmailCategoryByType(userId, 'newsletter');
+      
+      if (existingCategory) {
+        await storage.updateEmailCategory(existingCategory.id, {
+          count: newsletterEmails.length,
+          sampleEmails: newsletterEmails.slice(0, 10)
+        });
+      } else {
+        await storage.createEmailCategory({
+          userId,
+          categoryType: 'newsletter',
+          count: newsletterEmails.length,
+          sampleEmails: newsletterEmails.slice(0, 10)
+        });
+      }
+      
+      res.json(newsletterEmails);
+    } catch (error) {
+      console.error('Error fetching newsletter emails:', error);
+      res.status(500).json({ message: 'Failed to fetch newsletter emails', error: (error as Error).message });
+    }
+  });
+  
+  app.get('/api/gmail/regular', isAuthenticated, async (req, res) => {
+    try {
+      // Query for regular (non-categorized) emails
+      const query = '-subject:(verification OR code OR otp OR subscription OR newsletter OR discount OR sale OR coupon)';
+      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const regularEmails = [];
+      
+      for (const message of messages) {
+        try {
+          const fullMessage = await getMessage(req.session.accessToken!, message.id!);
+          
+          const headers = fullMessage.payload?.headers || [];
+          const fromHeader = headers.find(h => h.name?.toLowerCase() === 'from');
+          const subjectHeader = headers.find(h => h.name?.toLowerCase() === 'subject');
+          const dateHeader = headers.find(h => h.name?.toLowerCase() === 'date');
+          
+          if (!fromHeader || !subjectHeader || !dateHeader) continue;
+          
+          const sender = fromHeader.value || '';
+          const subject = subjectHeader.value || '';
+          const dateStr = dateHeader.value || '';
+          const date = new Date(dateStr);
+          const now = new Date();
+          const diffTime = Math.abs(now.getTime() - date.getTime());
+          const daysAgo = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          regularEmails.push({
+            id: fullMessage.id!,
+            sender: parseSenderName(sender),
+            subject,
+            snippet: fullMessage.snippet || '',
+            date: date.toISOString(),
+            labelIds: fullMessage.labelIds || [],
+            sizeEstimate: fullMessage.sizeEstimate || 0,
+            daysAgo,
+          });
+        } catch (err) {
+          console.error(`Error processing message ${message.id}:`, err);
+        }
+      }
+      
+      // Store the results in email category
+      const userId = req.session.userId!;
+      const existingCategory = await storage.getEmailCategoryByType(userId, 'regular');
+      
+      if (existingCategory) {
+        await storage.updateEmailCategory(existingCategory.id, {
+          count: regularEmails.length,
+          sampleEmails: regularEmails.slice(0, 10)
+        });
+      } else {
+        await storage.createEmailCategory({
+          userId,
+          categoryType: 'regular',
+          count: regularEmails.length,
+          sampleEmails: regularEmails.slice(0, 10)
+        });
+      }
+      
+      res.json(regularEmails);
+    } catch (error) {
+      console.error('Error fetching regular emails:', error);
+      res.status(500).json({ message: 'Failed to fetch regular emails', error: (error as Error).message });
     }
   });
 

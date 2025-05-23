@@ -2,11 +2,13 @@ import { google } from 'googleapis';
 import { oAuth2Client, getAuthClientForUser } from './auth';
 import { 
   Email, 
-  TemporaryCodeEmail, 
-  SubscriptionEmail, 
-  PromotionalEmail, 
-  NewsletterEmail, 
-  RegularEmail 
+  TemporaryCodeEmail
+} from '@shared/schema';
+import type {
+  SubscriptionEmail,
+  PromotionalEmail,
+  NewsletterEmail,
+  RegularEmail
 } from '@/lib/types';
 
 export async function getProfile(accessToken: string) {
@@ -151,7 +153,7 @@ export async function batchMoveToTrash(accessToken: string, messageIds: string[]
 }
 
 // Helper function to extract sender name from email
-function parseSenderName(sender: string): string {
+export function parseSenderName(sender: string): string {
   // Extract name from "Name <email@example.com>" format
   const match = sender.match(/^"?([^"<]+)"?\s*(?:<[^>]+>)?$/);
   if (match && match[1]) {
