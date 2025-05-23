@@ -25,8 +25,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     resave: false,
     saveUninitialized: false,
     cookie: { 
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      secure: false, // Set to false for Replit to work properly
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax' // Allow cross-site requests for OAuth
     },
     store: new SessionStore({
       checkPeriod: 86400000 // prune expired entries every 24h
@@ -60,8 +61,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.session.refreshToken = user.refreshToken;
       }
       
-      // Redirect to dashboard
-      res.redirect('/dashboard');
+      // Save session before redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: 'Session save failed' });
+        }
+        console.log('Session saved successfully, user ID:', user.id);
+        // Redirect to dashboard
+        res.redirect('/dashboard');
+      });
     } catch (error) {
       console.error('Auth callback error:', error);
       res.status(500).json({ message: 'Authentication failed', error: (error as Error).message });
