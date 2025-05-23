@@ -470,19 +470,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Message IDs are required' });
       }
       
-      const results = await batchMoveToTrash(req.session.accessToken!, messageIds);
+      console.log(`Attempting to move ${messageIds.length} emails to trash`);
       
-      // Record deletion in history with sender information for better tracking
-      await storage.createDeletionHistory({
-        userId: req.session.userId!,
-        categoryType: category || 'unknown',
-        count: messageIds.length,
-        emailIds: messageIds,
-        senderEmail: senderInfo?.email || 'unknown',
-        senderName: senderInfo?.name || 'unknown'
-      });
+      // Process messages individually and collect results
+      const allResults = [];
+      let successCount = 0;
       
-      res.json({ success: true, results });
+      for (const messageId of messageIds) {
+        try {
+          const result = await moveMessageToTrash(req.session.accessToken!, messageId);
+          allResults.push({ messageId, success: true, data: result });
+          successCount++;
+        } catch (error) {
+          console.error(`Error trashing email ${messageId}:`, error);
+          allResults.push({ 
+            messageId, 
+            success: false, 
+            error: (error as any).message || 'Unknown error'
+          });
+        }
+      }
+      
+      const success = successCount > 0;
+      
+      // Only record history if at least one email was successfully moved
+      if (success) {
+        // Record deletion in history with sender information for better tracking
+        await storage.createDeletionHistory({
+          userId: req.session.userId!,
+          categoryType: category || 'unknown',
+          count: successCount,
+          emailIds: messageIds.slice(0, successCount),
+          senderEmail: senderInfo?.email || 'unknown',
+          senderName: senderInfo?.name || 'unknown'
+        });
+      }
+      
+      res.json({ success, results: allResults });
     } catch (error) {
       console.error('Error moving messages to trash:', error);
       res.status(500).json({ message: 'Failed to move messages to trash', error: (error as Error).message });
