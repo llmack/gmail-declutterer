@@ -11,6 +11,7 @@ import {
 } from '@/lib/types';
 import { getDaysAgoText } from '@/lib/utils';
 import PreviewModal from './PreviewModal';
+import AutomationDialog from './AutomationDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 type CategoryEmail = TemporaryCodeEmail | SubscriptionEmail | PromotionalEmail | NewsletterEmail | RegularEmail;
@@ -36,7 +37,9 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [automationDialogOpen, setAutomationDialogOpen] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<CategoryEmail | null>(null);
+  const [selectedSender, setSelectedSender] = useState<string | null>(null);
   const [removeSender, setRemoveSender] = useState(false);
   
   const handleCleanup = () => {
@@ -148,6 +151,21 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                           Don't Delete
                         </Button>
                       )}
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-blue-600 hover:bg-blue-50 flex items-center"
+                        onClick={() => {
+                          setSelectedSender(sender);
+                          setAutomationDialogOpen(true);
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Automate
+                      </Button>
                     </td>
                   </tr>
                 ))
@@ -204,6 +222,14 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
         emails={emails}
         title={`Preview ${title} Cleanup`}
         isLoading={isLoading}
+      />
+      
+      {/* Automation Dialog */}
+      <AutomationDialog
+        open={automationDialogOpen}
+        onOpenChange={setAutomationDialogOpen}
+        categoryType={title}
+        sender={selectedSender || undefined}
       />
 
       {/* Remove from list dialog */}

@@ -110,7 +110,7 @@ const History: React.FC = () => {
             <LoadingState />
           ) : (
             <>
-              <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-white shadow-sm">
                   <CardContent className="p-6">
                     <div className="flex flex-col">
@@ -139,7 +139,88 @@ const History: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+                
+                <Card className="bg-white shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600">Categories Cleaned</span>
+                      <span className="text-3xl font-bold text-gray-900">
+                        {Array.from(new Set((deletionHistory || []).map(entry => entry.categoryType))).length}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+              
+              {/* Active Automation Rules Section */}
+              {(() => {
+                // Load automation rules from localStorage
+                const rulesStr = localStorage.getItem('automationRules');
+                const rules = rulesStr ? JSON.parse(rulesStr) : [];
+                
+                return rules.length > 0 ? (
+                  <Card className="bg-white shadow-sm mb-8">
+                    <CardHeader>
+                      <CardTitle>Active Automation Rules</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-4">
+                        These rules will automatically delete emails based on your settings.
+                      </p>
+                      
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-neutral-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Category</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Age Threshold</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Frequency</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200">
+                            {rules.map((rule: any) => (
+                              <tr key={rule.id} className="hover:bg-neutral-50">
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                  {rule.categoryType === 'all' ? 'All Categories' : rule.categoryType}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700">
+                                  {rule.sender === 'all' ? 'All Senders' : rule.sender}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700">
+                                  Older than {rule.timePeriod} days
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700 capitalize">
+                                  {rule.frequency}
+                                </td>
+                                <td className="px-4 py-3 text-sm">
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="h-8"
+                                    onClick={() => {
+                                      // Remove this rule
+                                      const updatedRules = rules.filter((r: any) => r.id !== rule.id);
+                                      localStorage.setItem('automationRules', JSON.stringify(updatedRules));
+                                      // Force re-render
+                                      setTimeout(() => {
+                                        window.location.reload();
+                                      }, 300);
+                                    }}
+                                  >
+                                    Delete Rule
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null;
+              })()}
               
               {/* Excluded Senders Section */}
               {excludedSenders.length > 0 && (
