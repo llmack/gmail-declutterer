@@ -485,8 +485,9 @@ const Dashboard: React.FC = () => {
               }
               title="Subscriptions"
               description="Regular emails from services you've subscribed to."
-              emails={subscriptionEmails || []}
+              emails={filterExcludedSenders(subscriptionEmails || [])}
               onCleanup={handleCleanup}
+              onRemoveFromList={handleExcludeSender}
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -514,8 +515,9 @@ const Dashboard: React.FC = () => {
               }
               title="Promotions"
               description="Marketing emails, deals, and promotional offers."
-              emails={promotionalEmails || []}
+              emails={filterExcludedSenders(promotionalEmails || [])}
               onCleanup={handleCleanup}
+              onRemoveFromList={handleExcludeSender}
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -543,8 +545,9 @@ const Dashboard: React.FC = () => {
               }
               title="Newsletters"
               description="Newsletter emails, news digests, and publications."
-              emails={newsletterEmails || []}
+              emails={filterExcludedSenders(newsletterEmails || [])}
               onCleanup={handleCleanup}
+              onRemoveFromList={handleExcludeSender}
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -572,8 +575,9 @@ const Dashboard: React.FC = () => {
               }
               title="Regular Emails"
               description="Regular emails that don't fall into other categories."
-              emails={regularEmails || []}
+              emails={filterExcludedSenders(regularEmails || [])}
               onCleanup={handleCleanup}
+              onRemoveFromList={handleExcludeSender}
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
