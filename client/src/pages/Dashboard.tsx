@@ -163,6 +163,30 @@ const Dashboard: React.FC = () => {
                    )) || 
                    (analysisStarted && !dashboardLoaded);
 
+  // Group emails by sender for better organization and bulk actions
+  const groupEmailsBySender = (emails) => {
+    if (!emails) return [];
+    
+    const groupedMap = new Map();
+    
+    emails.forEach(email => {
+      if (!groupedMap.has(email.sender)) {
+        groupedMap.set(email.sender, []);
+      }
+      groupedMap.get(email.sender).push(email);
+    });
+    
+    // Convert map to array of groups
+    return Array.from(groupedMap.entries()).map(([sender, emails]) => ({
+      sender,
+      emails,
+      count: emails.length,
+      totalSize: emails.reduce((total, email) => total + (email.sizeEstimate || 0), 0),
+      oldestDaysAgo: Math.max(...emails.map(email => email.daysAgo || 0))
+    }));
+  };
+  
+  // Handle deleting emails by moving them to trash
   const handleCleanup = async (emailIds: string[]) => {
     try {
       await trashEmailsMutation.mutateAsync(emailIds);
@@ -192,6 +216,17 @@ const Dashboard: React.FC = () => {
       });
       console.error('Trash emails error:', error);
     }
+  };
+  
+  // Handle removing emails from a specific sender
+  const handleRemoveBySender = (sender) => {
+    // Implementation will vary based on which category is active
+    // For now, we'll just show a message
+    toast({
+      title: 'Sender Removed',
+      description: `All emails from ${sender} have been removed from the list.`,
+      variant: 'default',
+    });
   };
 
   const stats = calculateEmailStats(

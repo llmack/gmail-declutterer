@@ -82,29 +82,46 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
             <thead className="bg-neutral-50">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Subject</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Emails</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Age</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {emails.length > 0 ? (
-                emails.slice(0, 3).map((email) => (
-                  <tr key={email.id} className="hover:bg-neutral-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{email.sender}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{email.subject}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{getDaysAgoText(email.daysAgo)}</td>
+                // Group emails by sender
+                Object.entries(
+                  emails.reduce((acc, email) => {
+                    if (!acc[email.sender]) {
+                      acc[email.sender] = [];
+                    }
+                    acc[email.sender].push(email);
+                    return acc;
+                  }, {})
+                ).slice(0, 3).map(([sender, senderEmails]) => (
+                  <tr key={sender} className="hover:bg-neutral-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {senderEmails.length} emails
+                      <span className="text-xs text-gray-500 ml-2 block">
+                        Latest: {(senderEmails as any[])[0].subject}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {getDaysAgoText(Math.min(...(senderEmails as any[]).map(e => e.daysAgo)))}
+                    </td>
                     <td className="px-4 py-3 text-sm">
-                      {onRemoveFromList && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 text-gray-500 hover:text-red-500"
-                          onClick={() => openRemoveDialog(email)}
-                        >
-                          Remove
-                        </Button>
-                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-gray-500 hover:text-red-500"
+                        onClick={() => {
+                          const ids = (senderEmails as any[]).map(e => e.id);
+                          onCleanup(ids);
+                        }}
+                      >
+                        Delete All
+                      </Button>
                     </td>
                   </tr>
                 ))

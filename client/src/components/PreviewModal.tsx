@@ -53,16 +53,38 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
               <thead className="bg-neutral-50 sticky top-0">
                 <tr>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Sender</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Subject</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Emails</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Date Range</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200">
-                {emails.map((email) => (
-                  <tr key={email.id} className="hover:bg-neutral-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{email.sender}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{email.subject}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(email.date)}</td>
+                {/* Group by sender in preview as well */}
+                {Object.entries(
+                  emails.reduce((acc, email) => {
+                    if (!acc[email.sender]) {
+                      acc[email.sender] = [];
+                    }
+                    acc[email.sender].push(email);
+                    return acc;
+                  }, {})
+                ).map(([sender, senderEmails]) => (
+                  <tr key={sender} className="hover:bg-neutral-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{sender}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {(senderEmails as any[]).length} emails
+                      <div className="text-xs text-gray-500 mt-1">
+                        {(senderEmails as any[]).slice(0, 2).map((email: any) => (
+                          <div key={email.id} className="truncate max-w-sm">• {email.subject}</div>
+                        ))}
+                        {(senderEmails as any[]).length > 2 && 
+                          <div className="text-gray-400">+ {(senderEmails as any[]).length - 2} more</div>
+                        }
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {formatDate((senderEmails as any[])[0].date)} - 
+                      {formatDate((senderEmails as any[])[(senderEmails as any[]).length - 1].date)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
