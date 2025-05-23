@@ -165,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Query for subscription-like emails
       const query = 'subject:(newsletter OR subscription OR update OR weekly OR monthly OR daily)';
-      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const messages = await listMessages(req.session.accessToken!, query, 100);
       const subscriptionEmails = [];
       
       for (const message of messages) {
@@ -242,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Query for promotional emails
       const query = 'subject:(discount OR sale OR offer OR % OR deal OR promotion OR coupon)';
-      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const messages = await listMessages(req.session.accessToken!, query, 100);
       const promotionalEmails = [];
       
       for (const message of messages) {
@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Query for newsletter-type emails
       const query = 'subject:(newsletter OR digest OR news OR update OR alert)';
-      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const messages = await listMessages(req.session.accessToken!, query, 100);
       const newsletterEmails = [];
       
       for (const message of messages) {
@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Query for regular (non-categorized) emails
       const query = '-subject:(verification OR code OR otp OR subscription OR newsletter OR discount OR sale OR coupon)';
-      const messages = await listMessages(req.session.accessToken!, query, 10);
+      const messages = await listMessages(req.session.accessToken!, query, 100);
       const regularEmails = [];
       
       for (const message of messages) {

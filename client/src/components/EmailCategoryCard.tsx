@@ -20,8 +20,8 @@ interface EmailCategoryCardProps {
   title: string;
   description: string;
   emails: CategoryEmail[];
-  onCleanup: (emailIds: string[]) => void;
-  onRemoveFromList?: (emailId: string, removeSender: boolean) => void;
+  onCleanup: (emailIds: string[], category?: string, senderInfo?: {email: string, name: string}) => void;
+  onRemoveFromList?: (sender: string, removeSender: boolean) => void;
   isLoading?: boolean;
 }
 
