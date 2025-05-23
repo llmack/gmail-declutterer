@@ -8,6 +8,7 @@ import {
   getProfile, 
   getTemporaryCodeEmails, 
   batchMoveToTrash,
+  moveMessageToTrash,
   listMessages,
   getMessage,
   parseSenderName

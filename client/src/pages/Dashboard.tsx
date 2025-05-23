@@ -164,26 +164,31 @@ const Dashboard: React.FC = () => {
                    (analysisStarted && !dashboardLoaded);
 
   // Group emails by sender for better organization and bulk actions
-  const groupEmailsBySender = (emails) => {
+  const groupEmailsBySender = (emails: any[]) => {
     if (!emails) return [];
     
     const groupedMap = new Map();
     
-    emails.forEach(email => {
+    // Sort emails by daysAgo in descending order (oldest first)
+    const sortedEmails = [...emails].sort((a, b) => (b.daysAgo || 0) - (a.daysAgo || 0));
+    
+    sortedEmails.forEach(email => {
       if (!groupedMap.has(email.sender)) {
         groupedMap.set(email.sender, []);
       }
       groupedMap.get(email.sender).push(email);
     });
     
-    // Convert map to array of groups
-    return Array.from(groupedMap.entries()).map(([sender, emails]) => ({
-      sender,
-      emails,
-      count: emails.length,
-      totalSize: emails.reduce((total, email) => total + (email.sizeEstimate || 0), 0),
-      oldestDaysAgo: Math.max(...emails.map(email => email.daysAgo || 0))
-    }));
+    // Convert map to array of groups and sort groups by oldest email first
+    return Array.from(groupedMap.entries())
+      .map(([sender, emails]) => ({
+        sender,
+        emails,
+        count: emails.length,
+        totalSize: emails.reduce((total: number, email: any) => total + (email.sizeEstimate || 0), 0),
+        oldestDaysAgo: Math.max(...emails.map((email: any) => email.daysAgo || 0))
+      }))
+      .sort((a, b) => b.oldestDaysAgo - a.oldestDaysAgo);
   };
   
   // Handle deleting emails by moving them to trash
