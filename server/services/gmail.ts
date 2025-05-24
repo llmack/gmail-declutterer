@@ -8,7 +8,8 @@ import type {
   SubscriptionEmail,
   PromotionalEmail,
   NewsletterEmail,
-  RegularEmail
+  RegularEmail,
+  ReceiptEmail
 } from '@/lib/types';
 
 export async function getProfile(accessToken: string) {

@@ -13,6 +13,7 @@ import {
   getMessage,
   parseSenderName
 } from "./services/gmail";
+import { getReceiptEmails } from "./services/receipt-emails";
 
 // Define custom session type
 declare module 'express-session' {

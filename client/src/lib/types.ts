@@ -52,6 +52,12 @@ export interface RegularEmail extends Email {
   daysAgo: number;
 }
 
+export interface ReceiptEmail extends Email {
+  sender: string;
+  receiptType?: 'order' | 'bill' | 'receipt' | 'invoice';
+  daysAgo: number;
+}
+
 export interface EmailStats {
   totalEmails: number;
   storageUsed: string;

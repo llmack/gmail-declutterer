@@ -7,7 +7,8 @@ import {
   SubscriptionEmail,
   PromotionalEmail,
   NewsletterEmail,
-  RegularEmail
+  RegularEmail,
+  ReceiptEmail
 } from '@/lib/types';
 
 
@@ -59,6 +60,15 @@ export function useNewsletterEmails(options = {}) {
 export function useRegularEmails(options = {}) {
   return useQuery<RegularEmail[]>({
     queryKey: ['/api/gmail/regular'],
+    refetchOnWindowFocus: false,
+    enabled: false, // Don't fetch on component mount
+    ...options
+  });
+}
+
+export function useReceiptEmails(options = {}) {
+  return useQuery<ReceiptEmail[]>({
+    queryKey: ['/api/gmail/receipts'],
     refetchOnWindowFocus: false,
     enabled: false, // Don't fetch on component mount
     ...options
