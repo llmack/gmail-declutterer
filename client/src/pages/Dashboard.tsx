@@ -105,6 +105,16 @@ const Dashboard: React.FC = () => {
     enabled: analysisStarted // Only fetch when analysis is started
   });
   
+  // Receipt, Order, and Bill emails
+  const { 
+    data: receiptEmails,
+    isLoading: receiptEmailsLoading,
+    refetch: refetchReceiptEmails,
+    isFetching: isReceiptEmailsFetching,
+  } = useReceiptEmails({
+    enabled: analysisStarted // Only fetch when analysis is started
+  });
+  
   const trashEmailsMutation = useTrashEmails();
 
   const [dashboardLoaded, setDashboardLoaded] = useState(false);
@@ -115,6 +125,7 @@ const Dashboard: React.FC = () => {
   const [localPromotionalEmails, setLocalPromotionalEmails] = useState<PromotionalEmail[]>([]);
   const [localNewsletterEmails, setLocalNewsletterEmails] = useState<NewsletterEmail[]>([]);
   const [localRegularEmails, setLocalRegularEmails] = useState<RegularEmail[]>([]);
+  const [localReceiptEmails, setLocalReceiptEmails] = useState<ReceiptEmail[]>([]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -138,7 +149,8 @@ const Dashboard: React.FC = () => {
       refetchSubscriptions(),
       refetchPromotions(),
       refetchNewsletters(),
-      refetchRegularEmails()
+      refetchRegularEmails(),
+      refetchReceiptEmails()
     ]);
     
     // Simulate loading state for better UX
@@ -160,13 +172,15 @@ const Dashboard: React.FC = () => {
                      subscriptionsLoading || 
                      promotionsLoading || 
                      newslettersLoading || 
-                     regularEmailsLoading || 
+                     regularEmailsLoading ||
+                     receiptEmailsLoading || 
                      isProfileFetching || 
                      isTempCodesFetching || 
                      isSubscriptionsFetching || 
                      isPromotionsFetching || 
                      isNewslettersFetching || 
-                     isRegularEmailsFetching
+                     isRegularEmailsFetching ||
+                     isReceiptEmailsFetching
                    )) || 
                    (analysisStarted && !dashboardLoaded);
 
