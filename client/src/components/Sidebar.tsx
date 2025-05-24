@@ -7,7 +7,8 @@ import {
   Tag, 
   Newspaper, 
   MessageSquare,
-  BarChart
+  BarChart,
+  FileText
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -19,6 +20,7 @@ interface SidebarProps {
     promotions?: number;
     newsletters?: number;
     regular?: number;
+    receipts?: number;
   };
 }
 
@@ -57,6 +59,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       name: 'Newsletters', 
       icon: <Newspaper className="h-5 w-5" />,
       count: categoryCounts.newsletters
+    },
+    { 
+      id: 'receipts', 
+      name: 'Orders & Receipts', 
+      icon: <FileText className="h-5 w-5" />,
+      count: categoryCounts.receipts
     },
     { 
       id: 'regular', 

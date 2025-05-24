@@ -511,6 +511,20 @@ const Dashboard: React.FC = () => {
                     <p className="text-sm text-gray-500">{categoryCounts.newsletters} emails</p>
                   </div>
                 </button>
+                <button 
+                  onClick={() => handleCategoryChange('receipts')}
+                  className="border rounded-lg p-4 flex items-center space-x-4 hover:bg-gray-50 w-full text-left transition-colors"
+                >
+                  <div className="bg-teal-100 p-3 rounded-full">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Orders & Receipts</h3>
+                    <p className="text-sm text-gray-500">{categoryCounts.receipts} emails</p>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
@@ -680,6 +694,36 @@ const Dashboard: React.FC = () => {
               title="Regular Emails"
               description="Regular emails that don't fall into other categories."
               emails={filterExcludedSenders(regularEmails || [])}
+              onCleanup={handleCleanup}
+              onRemoveFromList={handleExcludeSender}
+              isLoading={trashEmailsMutation.isPending}
+            />
+          </div>
+        );
+        
+      case 'receipts':
+        return (
+          <div>
+            <h2 className="text-xl font-medium text-gray-900 mb-4">Orders, Bills, and Receipts</h2>
+            <p className="text-gray-600 mb-6">
+              These are order confirmations, bills, receipts, and financial transaction records.
+            </p>
+            
+            <EmailCategoryCard
+              icon={
+                <svg 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="w-5 h-5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              }
+              title="Orders & Receipts"
+              description="Order confirmations, bills, receipts, and financial records."
+              emails={filterExcludedSenders(receiptEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               isLoading={trashEmailsMutation.isPending}
