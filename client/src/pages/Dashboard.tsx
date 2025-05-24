@@ -10,14 +10,16 @@ import {
   useSubscriptionEmails,
   usePromotionalEmails,
   useNewsletterEmails,
-  useRegularEmails
+  useRegularEmails,
+  useReceiptEmails
 } from '@/hooks/useGmailAPI';
 import { 
   TemporaryCodeEmail, 
   SubscriptionEmail, 
   PromotionalEmail, 
   NewsletterEmail, 
-  RegularEmail 
+  RegularEmail,
+  ReceiptEmail
 } from '@/lib/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';

@@ -398,10 +398,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get('/api/gmail/receipts', isAuthenticated, async (req, res) => {
+    try {
+      const receiptEmails = await getReceiptEmails(req.session.accessToken!);
+      
+      // Store the results in email category
+      const userId = req.session.userId!;
+      const existingCategory = await storage.getEmailCategoryByType(userId, 'receipt');
+      
+      if (existingCategory) {
+        await storage.updateEmailCategory(existingCategory.id, {
+          count: receiptEmails.length,
+          sampleEmails: receiptEmails.slice(0, 10)
+        });
+      } else {
+        await storage.createEmailCategory({
+          userId,
+          categoryType: 'receipt',
+          count: receiptEmails.length,
+          sampleEmails: receiptEmails.slice(0, 10)
+        });
+      }
+      
+      res.json(receiptEmails);
+    } catch (error) {
+      console.error('Error fetching receipt emails:', error);
+      res.status(500).json({ message: 'Failed to fetch receipt emails', error: (error as Error).message });
+    }
+  });
+
   app.get('/api/gmail/regular', isAuthenticated, async (req, res) => {
     try {
-      // Query for regular (non-categorized) emails
-      const query = '-subject:(verification OR code OR otp OR subscription OR newsletter OR discount OR sale OR coupon)';
+      // Query for regular (non-categorized) emails - now also excluding receipts/orders/bills
+      const query = '-subject:(verification OR code OR otp OR subscription OR newsletter OR discount OR sale OR coupon OR receipt OR order OR invoice OR bill OR purchase OR payment OR transaction OR confirmation)';
       const messages = await listMessages(req.session.accessToken!, query, 100);
       const regularEmails = [];
       
