@@ -330,7 +330,8 @@ const Dashboard: React.FC = () => {
     subscriptionEmails,
     promotionalEmails,
     newsletterEmails,
-    regularEmails
+    regularEmails,
+    receiptEmails
   );
   
   // Calculate category counts for the sidebar
@@ -339,7 +340,8 @@ const Dashboard: React.FC = () => {
     subscriptions: subscriptionEmails?.length || 0,
     promotions: promotionalEmails?.length || 0,
     newsletters: newsletterEmails?.length || 0,
-    regular: regularEmails?.length || 0
+    regular: regularEmails?.length || 0,
+    receipts: receiptEmails?.length || 0
   };
 
   // Filter out excluded senders from email lists

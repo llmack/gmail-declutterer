@@ -118,7 +118,8 @@ export function calculateEmailStats(
   subscriptions?: SubscriptionEmail[],
   promotions?: PromotionalEmail[],
   newsletters?: NewsletterEmail[],
-  regular?: RegularEmail[]
+  regular?: RegularEmail[],
+  receipts?: ReceiptEmail[]
 ) {
   if (!profile) {
     return {
