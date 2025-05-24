@@ -107,6 +107,7 @@ export function useTrashEmails() {
       queryClient.invalidateQueries({ queryKey: ['/api/gmail/promotions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/gmail/newsletters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/gmail/regular'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gmail/receipts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/history/deletions'] });
     }
   });
@@ -150,9 +151,10 @@ export function calculateEmailStats(
   const subscriptionsCount = subscriptions?.length || 0;
   const promotionsCount = promotions?.length || 0;
   const newslettersCount = newsletters?.length || 0;
+  const receiptsCount = receipts?.length || 0;
   
   // Calculate total declutterable emails
-  const totalDeclutterable = tempCodesCount + subscriptionsCount + promotionsCount + newslettersCount;
+  const totalDeclutterable = tempCodesCount + subscriptionsCount + promotionsCount + newslettersCount + receiptsCount;
   
   // Calculate declutter potential as a percentage
   const declutterPotential = totalDeclutterable > 0 && totalEmails > 0
