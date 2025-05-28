@@ -126,6 +126,9 @@ const Dashboard: React.FC = () => {
   const [localNewsletterEmails, setLocalNewsletterEmails] = useState<NewsletterEmail[]>([]);
   const [localRegularEmails, setLocalRegularEmails] = useState<RegularEmail[]>([]);
   const [localReceiptEmails, setLocalReceiptEmails] = useState<ReceiptEmail[]>([]);
+  
+  // Track moved emails by sender to prevent them from appearing in multiple categories
+  const [movedSenders, setMovedSenders] = useState<Record<string, {from: string, to: string, emailIds: string[]}>>({});
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -217,26 +220,23 @@ const Dashboard: React.FC = () => {
     try {
       console.log(`Moving ${emailIds.length} emails to ${targetCategory} category`);
       
-      // For now, we'll show a success message and remove the emails from current view
-      // In a real implementation, this would involve API calls to re-categorize emails
+      if (senderInfo) {
+        // Track the move to prevent emails from showing in multiple categories
+        setMovedSenders(prev => ({
+          ...prev,
+          [senderInfo.email]: {
+            from: activeCategory,
+            to: targetCategory,
+            emailIds: emailIds
+          }
+        }));
+      }
+      
       toast({
         title: 'Emails Moved!',
-        description: `${emailIds.length} emails have been moved to ${targetCategory}.`,
+        description: `${emailIds.length} emails from ${senderInfo?.name || 'sender'} have been moved to ${targetCategory}.`,
         variant: 'default',
       });
-      
-      // Refresh data to reflect the changes
-      if (analysisStarted) {
-        await Promise.all([
-          refetchProfile(),
-          refetchTempCodes(),
-          refetchSubscriptions(),
-          refetchPromotions(),
-          refetchNewsletters(),
-          refetchRegularEmails(),
-          refetchReceiptEmails()
-        ]);
-      }
       
     } catch (error) {
       console.error('Error moving emails:', error);
@@ -246,6 +246,26 @@ const Dashboard: React.FC = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  // Function to filter emails based on moves and exclusions
+  const getFilteredEmails = (emails: any[], currentCategory: string) => {
+    if (!emails) return [];
+    
+    return emails.filter(email => {
+      // First check if sender is excluded
+      if (excludedSenders.includes(email.sender)) {
+        return false;
+      }
+      
+      // Check if this sender has been moved from this category
+      const moveRecord = movedSenders[email.sender];
+      if (moveRecord && moveRecord.from === currentCategory) {
+        return false; // Don't show in original category after move
+      }
+      
+      return true;
+    });
   };
 
   // Handle deleting emails by moving them to trash
@@ -370,14 +390,14 @@ const Dashboard: React.FC = () => {
     receiptEmails
   );
   
-  // Calculate category counts for the sidebar
+  // Calculate category counts for the sidebar using filtered emails
   const categoryCounts = {
-    tempCodes: tempCodeEmails?.length || 0,
-    subscriptions: subscriptionEmails?.length || 0,
-    promotions: promotionalEmails?.length || 0,
-    newsletters: newsletterEmails?.length || 0,
-    regular: regularEmails?.length || 0,
-    receipts: receiptEmails?.length || 0
+    tempCodes: getFilteredEmails(tempCodeEmails || [], 'temp-codes').length,
+    subscriptions: getFilteredEmails(subscriptionEmails || [], 'subscriptions').length,
+    promotions: getFilteredEmails(promotionalEmails || [], 'promotions').length,
+    newsletters: getFilteredEmails(newsletterEmails || [], 'newsletters').length,
+    regular: getFilteredEmails(regularEmails || [], 'regular').length,
+    receipts: getFilteredEmails(receiptEmails || [], 'receipts').length
   };
 
   // Filter out excluded senders from email lists
@@ -609,7 +629,7 @@ const Dashboard: React.FC = () => {
               }
               title="Temporary Codes"
               description="Verification codes, OTPs, and temporary login links that are no longer needed."
-              emails={filterExcludedSenders(tempCodeEmails || [])}
+              emails={getFilteredEmails(tempCodeEmails || [], 'temp-codes')}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               onMoveEmails={handleMoveEmails}
@@ -641,7 +661,7 @@ const Dashboard: React.FC = () => {
               }
               title="Subscriptions"
               description="Regular emails from services you've subscribed to."
-              emails={filterExcludedSenders(subscriptionEmails || [])}
+              emails={getFilteredEmails(subscriptionEmails || [], 'subscriptions')}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               onMoveEmails={handleMoveEmails}
@@ -673,7 +693,7 @@ const Dashboard: React.FC = () => {
               }
               title="Promotions"
               description="Marketing emails, deals, and promotional offers."
-              emails={filterExcludedSenders(promotionalEmails || [])}
+              emails={getFilteredEmails(promotionalEmails || [], 'promotions')}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               onMoveEmails={handleMoveEmails}
@@ -705,7 +725,7 @@ const Dashboard: React.FC = () => {
               }
               title="Newsletters"
               description="Newsletter emails, news digests, and publications."
-              emails={filterExcludedSenders(newsletterEmails || [])}
+              emails={getFilteredEmails(newsletterEmails || [], 'newsletters')}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               onMoveEmails={handleMoveEmails}
@@ -737,7 +757,7 @@ const Dashboard: React.FC = () => {
               }
               title="Regular Emails"
               description="Regular emails that don't fall into other categories."
-              emails={filterExcludedSenders(regularEmails || [])}
+              emails={getFilteredEmails(regularEmails || [], 'regular')}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               onMoveEmails={handleMoveEmails}
@@ -769,7 +789,7 @@ const Dashboard: React.FC = () => {
               }
               title="Orders & Receipts"
               description="Order confirmations, bills, receipts, and financial records."
-              emails={filterExcludedSenders(receiptEmails || [])}
+              emails={getFilteredEmails(receiptEmails || [], 'receipts')}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
               onMoveEmails={handleMoveEmails}
