@@ -70,6 +70,21 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
     }
   };
 
+  const handleMoveEmails = (targetCategory: string) => {
+    if (selectedSender && onMoveEmails) {
+      const senderEmails = emails.filter(email => email.sender === selectedSender);
+      const emailIds = senderEmails.map(email => email.id);
+      onMoveEmails(emailIds, targetCategory, { email: selectedSender, name: selectedSender });
+      setMoveDialogOpen(false);
+      setSelectedSender(null);
+    }
+  };
+
+  const openMoveDialog = (sender: string) => {
+    setSelectedSender(sender);
+    setMoveDialogOpen(true);
+  };
+
   return (
     <>
       <Card className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
@@ -141,6 +156,20 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                         </svg>
                         Delete
                       </Button>
+                      
+                      {onMoveEmails && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-blue-600 border-blue-300 hover:bg-blue-50 flex items-center"
+                          onClick={() => openMoveDialog(sender)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                          </svg>
+                          Move
+                        </Button>
+                      )}
                       
                       {onRemoveFromList && (
                         <Button 
@@ -237,6 +266,16 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
         onOpenChange={setAutomationDialogOpen}
         categoryType={title}
         sender={selectedSender || undefined}
+      />
+
+      {/* Move emails dialog */}
+      <MoveEmailsDialog
+        isOpen={moveDialogOpen}
+        onClose={() => setMoveDialogOpen(false)}
+        onMove={handleMoveEmails}
+        currentCategory={currentCategory || title.toLowerCase()}
+        emailCount={selectedSender ? emails.filter(e => e.sender === selectedSender).length : 0}
+        senderName={selectedSender || undefined}
       />
 
       {/* Remove from list dialog */}

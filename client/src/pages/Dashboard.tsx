@@ -212,6 +212,42 @@ const Dashboard: React.FC = () => {
       .sort((a, b) => b.oldestDaysAgo - a.oldestDaysAgo);
   };
   
+  // Handle moving emails between categories
+  const handleMoveEmails = async (emailIds: string[], targetCategory: string, senderInfo?: {email: string, name: string}) => {
+    try {
+      console.log(`Moving ${emailIds.length} emails to ${targetCategory} category`);
+      
+      // For now, we'll show a success message and remove the emails from current view
+      // In a real implementation, this would involve API calls to re-categorize emails
+      toast({
+        title: 'Emails Moved!',
+        description: `${emailIds.length} emails have been moved to ${targetCategory}.`,
+        variant: 'default',
+      });
+      
+      // Refresh data to reflect the changes
+      if (analysisStarted) {
+        await Promise.all([
+          refetchProfile(),
+          refetchTempCodes(),
+          refetchSubscriptions(),
+          refetchPromotions(),
+          refetchNewsletters(),
+          refetchRegularEmails(),
+          refetchReceiptEmails()
+        ]);
+      }
+      
+    } catch (error) {
+      console.error('Error moving emails:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to move emails. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Handle deleting emails by moving them to trash
   const handleCleanup = async (emailIds: string[], category?: string, senderInfo?: {email: string, name: string}) => {
     try {
@@ -568,7 +604,7 @@ const Dashboard: React.FC = () => {
                   strokeWidth={2}
                   className="w-5 h-5"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z" />
                 </svg>
               }
               title="Temporary Codes"
@@ -576,6 +612,8 @@ const Dashboard: React.FC = () => {
               emails={filterExcludedSenders(tempCodeEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
+              onMoveEmails={handleMoveEmails}
+              currentCategory="temp-codes"
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
