@@ -7,14 +7,16 @@ import {
   PromotionalEmail, 
   NewsletterEmail, 
   RegularEmail, 
+  ReceiptEmail,
   Email 
 } from '@/lib/types';
 import { getDaysAgoText } from '@/lib/utils';
 import PreviewModal from './PreviewModal';
 import AutomationDialog from './AutomationDialog';
+import MoveEmailsDialog from './MoveEmailsDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
-type CategoryEmail = TemporaryCodeEmail | SubscriptionEmail | PromotionalEmail | NewsletterEmail | RegularEmail;
+type CategoryEmail = TemporaryCodeEmail | SubscriptionEmail | PromotionalEmail | NewsletterEmail | RegularEmail | ReceiptEmail;
 
 interface EmailCategoryCardProps {
   icon: React.ReactNode;
@@ -23,6 +25,8 @@ interface EmailCategoryCardProps {
   emails: CategoryEmail[];
   onCleanup: (emailIds: string[], category?: string, senderInfo?: {email: string, name: string}) => void;
   onRemoveFromList?: (sender: string, removeSender: boolean) => void;
+  onMoveEmails?: (emailIds: string[], targetCategory: string, senderInfo?: {email: string, name: string}) => void;
+  currentCategory?: string;
   isLoading?: boolean;
 }
 
@@ -33,11 +37,14 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
   emails,
   onCleanup,
   onRemoveFromList,
+  onMoveEmails,
+  currentCategory,
   isLoading = false
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [automationDialogOpen, setAutomationDialogOpen] = useState(false);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<CategoryEmail | null>(null);
   const [selectedSender, setSelectedSender] = useState<string | null>(null);
   const [removeSender, setRemoveSender] = useState(false);
