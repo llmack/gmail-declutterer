@@ -1,4 +1,4 @@
-import { getMessage, listMessages, parseSenderName } from './gmail';
+import { getMessage, listMessages, listMessagesWithPagination, parseSenderName } from './gmail';
 import type { ReceiptEmail } from '@/lib/types';
 
 export async function getReceiptEmails(accessToken: string): Promise<ReceiptEmail[]> {
@@ -6,7 +6,7 @@ export async function getReceiptEmails(accessToken: string): Promise<ReceiptEmai
     // More specific query to find commercial receipts, orders, bills and invoices
     const query = '(receipt OR order OR invoice OR bill OR purchase OR payment OR transaction OR confirmation OR "order confirmation" OR "shipping confirmation" OR "order details" OR "payment receipt") AND (-from:personal -from:friend -from:family)';
     
-    const messages = await listMessages(accessToken, query, 100);
+    const messages = await listMessagesWithPagination(accessToken, query, 1000);
     
     const receiptEmails: ReceiptEmail[] = [];
     

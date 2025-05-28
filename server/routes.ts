@@ -432,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Query for regular (non-categorized) emails - now also excluding receipts/orders/bills
       const query = '-subject:(verification OR code OR otp OR subscription OR newsletter OR discount OR sale OR coupon OR receipt OR order OR invoice OR bill OR purchase OR payment OR transaction OR confirmation)';
-      const messages = await listMessages(req.session.accessToken!, query, 100);
+      const messages = await listMessagesWithPagination(req.session.accessToken!, query, 1000);
       const regularEmails = [];
       
       for (const message of messages) {
