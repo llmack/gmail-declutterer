@@ -35,6 +35,53 @@ export async function listMessages(accessToken: string, query: string = '', maxR
   return response.data.messages || [];
 }
 
+export async function listMessagesWithPagination(accessToken: string, query: string = '', totalLimit: number = 1000) {
+  const client = getAuthClientForUser(accessToken);
+  const gmail = google.gmail({ version: 'v1', auth: client });
+  
+  let allMessages: any[] = [];
+  let nextPageToken: string | undefined;
+  const pageSize = 500; // Gmail API max per request is 500
+  
+  console.log(`Fetching up to ${totalLimit} emails with query: ${query}`);
+  
+  while (allMessages.length < totalLimit) {
+    const remainingEmails = totalLimit - allMessages.length;
+    const currentPageSize = Math.min(pageSize, remainingEmails);
+    
+    console.log(`Fetching batch ${Math.floor(allMessages.length / pageSize) + 1}, requesting ${currentPageSize} emails...`);
+    
+    try {
+      const response = await gmail.users.messages.list({
+        userId: 'me',
+        q: query + ' -in:trash', // Exclude items in trash
+        maxResults: currentPageSize,
+        pageToken: nextPageToken,
+      });
+      
+      const messages = response.data.messages || [];
+      allMessages = allMessages.concat(messages);
+      
+      console.log(`Fetched ${messages.length} emails, total so far: ${allMessages.length}`);
+      
+      nextPageToken = response.data.nextPageToken ?? undefined;
+      
+      // Break if no more pages or no messages returned
+      if (!nextPageToken || messages.length === 0) {
+        console.log('No more pages available or no messages returned');
+        break;
+      }
+      
+    } catch (error) {
+      console.error('Error fetching email batch:', error);
+      break;
+    }
+  }
+  
+  console.log(`Finished fetching emails. Total retrieved: ${allMessages.length}`);
+  return allMessages;
+}
+
 export async function getMessage(accessToken: string, messageId: string) {
   const client = getAuthClientForUser(accessToken);
   const gmail = google.gmail({ version: 'v1', auth: client });
@@ -54,8 +101,8 @@ export async function getTemporaryCodeEmails(accessToken: string): Promise<Tempo
   const query = 'subject:(verification OR code OR otp OR "security code" OR "confirmation code")';
   
   try {
-    // Increased limit to get more emails
-    const messages = await listMessages(accessToken, query, 100);
+    // Use pagination to get up to 1000 emails
+    const messages = await listMessagesWithPagination(accessToken, query, 1000);
     
     if (!messages.length) {
       return [];
