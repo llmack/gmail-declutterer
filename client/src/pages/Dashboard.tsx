@@ -644,6 +644,8 @@ const Dashboard: React.FC = () => {
               emails={filterExcludedSenders(subscriptionEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
+              onMoveEmails={handleMoveEmails}
+              currentCategory="subscriptions"
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -674,6 +676,8 @@ const Dashboard: React.FC = () => {
               emails={filterExcludedSenders(promotionalEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
+              onMoveEmails={handleMoveEmails}
+              currentCategory="promotions"
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -704,6 +708,8 @@ const Dashboard: React.FC = () => {
               emails={filterExcludedSenders(newsletterEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
+              onMoveEmails={handleMoveEmails}
+              currentCategory="newsletters"
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -734,6 +740,8 @@ const Dashboard: React.FC = () => {
               emails={filterExcludedSenders(regularEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
+              onMoveEmails={handleMoveEmails}
+              currentCategory="regular"
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
@@ -764,6 +772,8 @@ const Dashboard: React.FC = () => {
               emails={filterExcludedSenders(receiptEmails || [])}
               onCleanup={handleCleanup}
               onRemoveFromList={handleExcludeSender}
+              onMoveEmails={handleMoveEmails}
+              currentCategory="receipts"
               isLoading={trashEmailsMutation.isPending}
             />
           </div>
