@@ -563,6 +563,7 @@ const Dashboard: React.FC = () => {
                 >
                   Delete All ({Object.values(categoryCounts).reduce((a, b) => a + b, 0)})
                 </Button>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button 
