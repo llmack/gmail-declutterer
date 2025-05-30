@@ -188,20 +188,7 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
                         </Button>
                       )}
                       
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 text-blue-600 hover:bg-blue-50 flex items-center"
-                        onClick={() => {
-                          setSelectedSender(sender);
-                          setAutomationDialogOpen(true);
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Automate
-                      </Button>
+
                     </td>
                   </tr>
                 ))
@@ -237,6 +224,18 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
               disabled={emails.length === 0 || isLoading}
             >
               Preview
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="px-3 py-1.5 text-sm rounded-md bg-orange-50 border border-orange-300 text-orange-700 hover:bg-orange-100 transition-colors duration-200"
+              onClick={() => setAutomationDialogOpen(true)}
+              disabled={emails.length === 0 || isLoading}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Automate Category
             </Button>
             <Button
               variant="default"

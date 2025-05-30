@@ -24,30 +24,48 @@ interface AutomationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categoryType?: string;
-  sender?: string;
+  emails?: any[];
+  onApplyRule?: (emailIds: string[], category: string, rule: any) => void;
 }
 
 const AutomationDialog: React.FC<AutomationDialogProps> = ({
   open,
   onOpenChange,
   categoryType,
-  sender
+  emails = [],
+  onApplyRule
 }) => {
   const [timePeriod, setTimePeriod] = useState('7'); // default 7 days
   const [frequency, setFrequency] = useState('daily');
   const [saveRule, setSaveRule] = useState(true);
   
-  // This would actually save the rule to localStorage for persistence
+  // Create and apply automation rule immediately
   const handleCreateRule = () => {
+    const timePeriodDays = parseInt(timePeriod);
+    
+    // Filter emails that meet the age criteria and are not moved/excluded
+    const eligibleEmails = emails.filter(email => {
+      return email.daysAgo >= timePeriodDays;
+    });
+    
+    if (eligibleEmails.length === 0) {
+      toast({
+        title: 'No Eligible Emails',
+        description: `No emails found that are ${timePeriodDays} days or older in this category.`,
+        variant: 'default',
+      });
+      onOpenChange(false);
+      return;
+    }
+    
     // Create the automation rule
     const rule = {
       id: Date.now().toString(),
-      categoryType: categoryType || 'all',
-      sender: sender || 'all',
-      timePeriod: parseInt(timePeriod),
+      categoryType: categoryType || 'unknown',
+      timePeriod: timePeriodDays,
       frequency,
       createdAt: new Date().toISOString(),
-      lastRun: null
+      emailsProcessed: eligibleEmails.length
     };
     
     // Get existing rules
@@ -58,11 +76,11 @@ const AutomationDialog: React.FC<AutomationDialogProps> = ({
     const updatedRules = [...existingRules, rule];
     localStorage.setItem('automationRules', JSON.stringify(updatedRules));
     
-    toast({
-      title: 'Automation Rule Created',
-      description: `Emails will be automatically deleted based on your rule settings.`,
-      variant: 'default',
-    });
+    // Apply the rule immediately by calling the parent handler
+    if (onApplyRule) {
+      const emailIds = eligibleEmails.map(email => email.id);
+      onApplyRule(emailIds, categoryType || 'unknown', rule);
+    }
     
     onOpenChange(false);
   };
