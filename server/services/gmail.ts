@@ -97,8 +97,8 @@ export async function getMessage(accessToken: string, messageId: string) {
 }
 
 export async function getTemporaryCodeEmails(accessToken: string): Promise<TemporaryCodeEmail[]> {
-  // Search query for potential temporary code emails
-  const query = 'subject:(verification OR code OR otp OR "security code" OR "confirmation code")';
+  // Enhanced search query for temporary code emails - much more comprehensive
+  const query = 'subject:(verification OR code OR otp OR "security code" OR "confirmation code" OR "verify" OR "authenticate" OR "login code" OR "access code" OR "pin" OR "token" OR "two-factor" OR "2fa" OR "multi-factor" OR "mfa" OR "sign in" OR "activation" OR "validation" OR "temporary" OR "one-time") OR from:(noreply OR "no-reply" OR security OR auth OR verification OR support)';
   
   try {
     // Use pagination to get up to 1000 emails

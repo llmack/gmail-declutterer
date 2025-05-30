@@ -1,0 +1,53 @@
+## 2. Email Classification & Rule Tests
+
+### TC-2.1: Temporary Code Email Detection
+**Objective**: Verify that emails containing temporary codes are correctly identified.  
+**Precondition**: User has emails with verification codes in their inbox.  
+**Steps**:
+1. Run the email analysis function
+2. Review the classification results for temporary code emails
+
+**Expected Result**: Emails with temporary codes (OTPs, verification codes) are correctly identified.  
+**Pass Criteria**: At least 90% of temporary code emails are correctly classified.
+
+### TC-2.2: Subscription Email Open Rate Calculation
+**Objective**: Verify accurate calculation of open rates for subscription emails.  
+**Precondition**: User has subscription emails with varying open rates.  
+**Steps**:
+1. Run the email analysis function
+2. Review subscription sources with their calculated open rates
+
+**Expected Result**: Open rates are calculated correctly based on read/unread status.  
+**Pass Criteria**: Open rates match manual verification for at least 5 different subscription sources.
+
+### TC-2.3: Promotional Email Expiration Detection
+**Objective**: Verify that expiration dates in promotional emails are correctly identified.  
+**Precondition**: User has promotional emails with various expiration dates.  
+**Steps**:
+1. Run the email analysis function
+2. Review promotional emails with detected expiration dates
+
+**Expected Result**: Expiration dates are correctly extracted from promotional emails.  
+**Pass Criteria**: At least 85% of expiration dates are correctly identified.
+
+### TC-2.4: News Email Age Calculation
+**Objective**: Verify that news emails are correctly aged and categorized.  
+**Precondition**: User has news emails of varying ages in their inbox.  
+**Steps**:
+1. Run the email analysis function
+2. Review news emails with their calculated age
+
+**Expected Result**: Email ages are calculated correctly based on received date.  
+**Pass Criteria**: All emails are aged correctly to within 1 day of accuracy.
+
+### TC-2.5: Custom Rule Definition
+**Objective**: Verify that users can create custom rules for specific senders.  
+**Precondition**: User is authenticated and has accessed the rule configuration screen.  
+**Steps**:
+1. Select a sender from the sender list
+2. Define custom rules for the selected sender
+3. Save the custom rules
+4. Run analysis with custom rules applied
+
+**Expected Result**: Custom rules are correctly applied to emails from the specified sender.  
+**Pass Criteria**: Emails are processed according to the custom rules defined.

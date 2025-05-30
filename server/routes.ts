@@ -167,7 +167,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/gmail/subscriptions', isAuthenticated, async (req, res) => {
     try {
       // Query for subscription-like emails
-      const query = 'subject:(newsletter OR subscription OR update OR weekly OR monthly OR daily)';
+      // Enhanced query for subscription emails - much more comprehensive
+      const query = 'subject:(subscription OR unsubscribe OR weekly OR monthly OR daily OR newsletter OR digest OR updates OR "mailing list" OR "email list" OR "subscribe" OR "notifications" OR "alerts" OR "member" OR "account" OR "billing" OR "statement") OR from:(newsletter OR digest OR updates OR notifications OR mailinglist OR "no-reply" OR noreply OR marketing OR communications OR support OR billing OR accounts)';
       const messages = await listMessagesWithPagination(req.session.accessToken!, query, 1000);
       const subscriptionEmails = [];
       
@@ -243,8 +244,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/gmail/promotions', isAuthenticated, async (req, res) => {
     try {
-      // Query for promotional emails
-      const query = 'subject:(discount OR sale OR offer OR % OR deal OR promotion OR coupon)';
+      // Enhanced query for promotional emails - much more comprehensive
+      const query = 'subject:(discount OR sale OR offer OR % OR deal OR promotion OR coupon OR promo OR special OR limited OR save OR free OR bonus OR exclusive OR flash OR clearance OR "black friday" OR "cyber monday" OR "spring sale" OR "summer sale" OR "winter sale" OR "holiday sale") OR from:(noreply OR marketing OR promo OR deals OR offers OR sales)';
       const messages = await listMessagesWithPagination(req.session.accessToken!, query, 1000);
       const promotionalEmails = [];
       
@@ -322,8 +323,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/gmail/newsletters', isAuthenticated, async (req, res) => {
     try {
-      // Query for newsletter-type emails
-      const query = 'subject:(newsletter OR digest OR news OR update OR alert)';
+      // Enhanced query for newsletter emails - much more comprehensive
+      const query = 'subject:(newsletter OR digest OR news OR update OR alert OR bulletin OR briefing OR "weekly wrap" OR "daily news" OR "morning brief" OR "evening update" OR "industry news" OR "tech news" OR "business news" OR "market update" OR "press release" OR "announcement") OR from:(news OR newsletter OR digest OR briefing OR bulletin OR press OR media OR "morning-brief" OR "daily-digest")';
       const messages = await listMessagesWithPagination(req.session.accessToken!, query, 1000);
       const newsletterEmails = [];
       
@@ -430,8 +431,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/gmail/regular', isAuthenticated, async (req, res) => {
     try {
-      // Query for regular (non-categorized) emails - now also excluding receipts/orders/bills
-      const query = '-subject:(verification OR code OR otp OR subscription OR newsletter OR discount OR sale OR coupon OR receipt OR order OR invoice OR bill OR purchase OR payment OR transaction OR confirmation)';
+      // Enhanced query for regular emails - excluding all categorized email types
+      const query = '-subject:(verification OR code OR otp OR "security code" OR verify OR authenticate OR subscription OR unsubscribe OR newsletter OR digest OR news OR update OR alert OR discount OR sale OR offer OR deal OR promotion OR coupon OR promo OR special OR limited OR save OR free OR bonus OR exclusive OR receipt OR order OR invoice OR bill OR purchase OR payment OR transaction OR confirmation OR "order confirmation") AND -from:(noreply OR "no-reply" OR marketing OR promo OR deals OR offers OR sales OR newsletter OR digest OR updates OR notifications OR security OR auth OR verification OR support OR billing OR accounts)';
       const messages = await listMessagesWithPagination(req.session.accessToken!, query, 1000);
       const regularEmails = [];
       
