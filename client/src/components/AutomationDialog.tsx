@@ -91,24 +91,12 @@ const AutomationDialog: React.FC<AutomationDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Create Automation Rule</DialogTitle>
           <DialogDescription>
-            Set up automatic deletion for {sender ? `emails from ${sender}` : 
-            categoryType ? `${categoryType} emails` : 'emails'}
+            Set up automatic deletion for {categoryType ? `${categoryType} emails` : 'emails'} based on age criteria.
+            This will immediately delete qualifying emails and create a rule for future use.
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="sender" className="text-right">
-              Sender
-            </Label>
-            <Input 
-              id="sender" 
-              value={sender || 'All Senders'} 
-              className="col-span-3" 
-              disabled={!!sender}
-            />
-          </div>
-          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">
               Category
@@ -118,6 +106,18 @@ const AutomationDialog: React.FC<AutomationDialogProps> = ({
               value={categoryType || 'All Categories'} 
               className="col-span-3" 
               disabled={!!categoryType}
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="emails-count" className="text-right">
+              Emails Found
+            </Label>
+            <Input 
+              id="emails-count" 
+              value={`${emails.length} emails in ${categoryType || 'category'}`} 
+              className="col-span-3" 
+              disabled={true}
             />
           </div>
           

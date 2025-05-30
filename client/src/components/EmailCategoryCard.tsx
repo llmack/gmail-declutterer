@@ -264,7 +264,25 @@ const EmailCategoryCard: React.FC<EmailCategoryCardProps> = ({
         open={automationDialogOpen}
         onOpenChange={setAutomationDialogOpen}
         categoryType={title}
-        sender={selectedSender || undefined}
+        emails={emails}
+        onApplyRule={(emailIds, category, rule) => {
+          // Apply the automation rule immediately
+          onCleanup(emailIds, category, { email: '', name: `Automation Rule: ${rule.timePeriod} days` });
+          
+          // Log to history
+          const historyEntry = {
+            timestamp: new Date().toISOString(),
+            category: category,
+            action: 'automation_rule_applied',
+            emailCount: emailIds.length,
+            rule: rule
+          };
+          
+          const existingHistory = localStorage.getItem('deletionHistory');
+          const history = existingHistory ? JSON.parse(existingHistory) : [];
+          history.unshift(historyEntry);
+          localStorage.setItem('deletionHistory', JSON.stringify(history));
+        }}
       />
 
       {/* Move emails dialog */}
