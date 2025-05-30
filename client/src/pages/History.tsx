@@ -24,11 +24,33 @@ const History: React.FC = () => {
   const [viewMode, setViewMode] = useState<'bySender' | 'byCategory' | 'byDate'>('bySender');
   const [excludedSenders, setExcludedSenders] = useState<string[]>([]);
   
-  // Fetch deletion history from the server
-  const { data: deletionHistory, isLoading } = useQuery({
-    queryKey: ['/api/history/deletions'],
-    queryFn: getQueryFn<DeletionHistory[]>({ on401: 'throw' }),
-  });
+  // Load deletion history from localStorage instead of server
+  const [deletionHistory, setDeletionHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Load deletion history from localStorage
+    const historyStr = localStorage.getItem('deletionHistory');
+    if (historyStr) {
+      try {
+        const history = JSON.parse(historyStr);
+        // Filter to only show items from the last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentHistory = history.filter((item: any) => {
+          const itemDate = new Date(item.timestamp || item.createdAt);
+          return itemDate >= thirtyDaysAgo;
+        });
+        
+        setDeletionHistory(recentHistory);
+      } catch (e) {
+        console.error('Error parsing deletion history:', e);
+        setDeletionHistory([]);
+      }
+    }
+    setIsLoading(false);
+  }, []);
   
   // Load excluded senders from localStorage
   useEffect(() => {
@@ -55,15 +77,18 @@ const History: React.FC = () => {
   };
   
   // Function to create a Gmail search URL to view trashed emails from a sender
-  const getGmailTrashLink = (sender: string) => {
-    const encodedSender = encodeURIComponent(`from:${sender}`);
-    return `https://mail.google.com/mail/u/0/#search/in%3Atrash+${encodedSender}`;
+  const getGmailTrashLink = (sender?: string) => {
+    if (sender) {
+      const encodedSender = encodeURIComponent(`from:${sender}`);
+      return `https://mail.google.com/mail/u/0/#search/in%3Atrash+${encodedSender}`;
+    }
+    return `https://mail.google.com/mail/u/0/#trash`;
   };
   
   // Calculate total deleted emails
   const getTotalEmailsDeleted = () => {
     if (!deletionHistory) return 0;
-    return deletionHistory.reduce((total, entry) => total + entry.count, 0);
+    return deletionHistory.reduce((total, entry) => total + (entry.emailCount || entry.count || 0), 0);
   };
   
   // Calculate total storage saved (in MB)
@@ -122,10 +147,38 @@ const History: React.FC = () => {
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Deletion History</h1>
-            <p className="text-gray-600">
-              Track your email cleanup activity and recover emails if needed.
-            </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">Deletion History</h1>
+                <p className="text-gray-600">
+                  Track your email cleanup activity and recover emails if needed. History is kept for 30 days.
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                  onClick={() => window.open(getGmailTrashLink(), '_blank')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  View Gmail Trash
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDeletionHistory([]);
+                    localStorage.removeItem('deletionHistory');
+                    localStorage.removeItem('automationRules');
+                  }}
+                >
+                  Clear History
+                </Button>
+              </div>
+            </div>
           </div>
           
           {isLoading ? (
