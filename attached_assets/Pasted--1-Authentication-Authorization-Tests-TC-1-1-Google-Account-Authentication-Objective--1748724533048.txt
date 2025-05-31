@@ -1,0 +1,215 @@
+## 1. Authentication & Authorization Tests
+
+### TC-1.1: Google Account Authentication
+**Objective**: Verify that users can successfully authenticate with their Google account.  
+**Precondition**: User has a valid Google account with Gmail enabled.  
+**Steps**:
+1. Launch the application
+2. Click on "Sign in with Google" button
+3. Complete Google authentication flow
+4. Grant required permissions
+
+**Expected Result**: User is successfully authenticated and redirected to the dashboard.  
+**Pass Criteria**: Authentication completes without errors, and user can access their Gmail data.
+
+### TC-1.2: Permission Verification
+**Objective**: Verify that the application requests and receives only the required permissions.  
+**Precondition**: User has a Google account and is not authenticated in the app.  
+**Steps**:
+1. Initiate the authentication process
+2. Review requested permissions on Google consent screen
+3. Compare with the documented required permissions
+
+**Expected Result**: Only the documented required permissions are requested.  
+**Pass Criteria**: Permission scope matches exactly with the specified requirements in the PRD.
+
+### TC-1.3: Authentication Persistence
+**Objective**: Verify that authentication persists between sessions.  
+**Precondition**: User has previously authenticated with the application.  
+**Steps**:
+1. Close the application
+2. Reopen the application after some time
+
+**Expected Result**: User remains authenticated without needing to sign in again.  
+**Pass Criteria**: User is automatically signed in upon reopening the application.
+
+### TC-1.4: Permission Revocation
+**Objective**: Verify that users can revoke access to their Gmail account.  
+**Precondition**: User is authenticated with the application.  
+**Steps**:
+1. Navigate to account settings in the application
+2. Select "Disconnect Gmail account"
+3. Confirm disconnection
+
+**Expected Result**: Application access is revoked, and user is signed out.  
+**Pass Criteria**: User must reauthenticate to use the application again.
+
+## 2. Email Classification & Rule Tests
+
+### TC-2.1: Temporary Code Email Detection
+**Objective**: Verify that emails containing temporary codes are correctly identified.  
+**Precondition**: User has emails with verification codes in their inbox.  
+**Steps**:
+1. Run the email analysis function
+2. Review the classification results for temporary code emails
+
+**Expected Result**: Emails with temporary codes (OTPs, verification codes) are correctly identified.  
+**Pass Criteria**: At least 90% of temporary code emails are correctly classified.
+
+### TC-2.2: Subscription Email Open Rate Calculation
+**Objective**: Verify accurate calculation of open rates for subscription emails.  
+**Precondition**: User has subscription emails with varying open rates.  
+**Steps**:
+1. Run the email analysis function
+2. Review subscription sources with their calculated open rates
+
+**Expected Result**: Open rates are calculated correctly based on read/unread status.  
+**Pass Criteria**: Open rates match manual verification for at least 5 different subscription sources.
+
+### TC-2.3: Promotional Email Expiration Detection
+**Objective**: Verify that expiration dates in promotional emails are correctly identified.  
+**Precondition**: User has promotional emails with various expiration dates.  
+**Steps**:
+1. Run the email analysis function
+2. Review promotional emails with detected expiration dates
+
+**Expected Result**: Expiration dates are correctly extracted from promotional emails.  
+**Pass Criteria**: At least 85% of expiration dates are correctly identified.
+
+### TC-2.4: News Email Age Calculation
+**Objective**: Verify that news emails are correctly aged and categorized.  
+**Precondition**: User has news emails of varying ages in their inbox.  
+**Steps**:
+1. Run the email analysis function
+2. Review news emails with their calculated age
+
+**Expected Result**: Email ages are calculated correctly based on received date.  
+**Pass Criteria**: All emails are aged correctly to within 1 day of accuracy.
+
+### TC-2.5: Custom Rule Definition
+**Objective**: Verify that users can create custom rules for specific senders.  
+**Precondition**: User is authenticated and has accessed the rule configuration screen.  
+**Steps**:
+1. Select a sender from the sender list
+2. Define custom rules for the selected sender
+3. Save the custom rules
+4. Run analysis with custom rules applied
+
+**Expected Result**: Custom rules are correctly applied to emails from the specified sender.  
+**Pass Criteria**: Emails are processed according to the custom rules defined.
+
+## 3. Deletion & Safety Feature Tests
+
+### TC-3.1: Temporary Code Email Auto-Deletion
+**Objective**: Verify that temporary code emails are automatically deleted after 24 hours.  
+**Precondition**: System has identified temporary code emails older than 24 hours.  
+**Steps**:
+1. Enable the auto-deletion rule for temporary codes
+2. Run the deletion process
+3. Check if temporary code emails older than 24 hours are deleted
+
+**Expected Result**: All temporary code emails older than 24 hours are moved to trash.  
+**Pass Criteria**: 100% of eligible temporary code emails are processed correctly.
+
+### TC-3.2: Low-Engagement Subscription Email Deletion
+**Objective**: Verify that subscription emails with low open rates are deleted.  
+**Precondition**: System has identified subscription sources with less than 10% open rate.  
+**Steps**:
+1. Enable the subscription email rule
+2. Run the deletion process
+3. Verify deletion results for low-engagement subscriptions
+
+**Expected Result**: Emails from subscription sources with less than 10% open rate are deleted.  
+**Pass Criteria**: All emails from qualifying sources are correctly processed.
+
+### TC-3.3: Expired Promotional Email Deletion
+**Objective**: Verify that expired promotional emails are deleted.  
+**Precondition**: System has identified promotional emails with expired offers.  
+**Steps**:
+1. Enable the promotional email rule
+2. Run the deletion process
+3. Verify deletion results for expired promotional emails
+
+**Expected Result**: All promotional emails with expired dates are deleted.  
+**Pass Criteria**: At least 95% of expired promotional emails are correctly deleted.
+
+### TC-3.4: Old News Email Deletion
+**Objective**: Verify that news emails older than 30 days are deleted.  
+**Precondition**: System has identified news emails older than 30 days.  
+**Steps**:
+1. Enable the news email rule
+2. Run the deletion process
+3. Verify deletion results for old news emails
+
+**Expected Result**: All news emails older than 30 days are deleted.  
+**Pass Criteria**: 100% of qualifying news emails are correctly processed.
+
+### TC-3.5: Critical Email Protection
+**Objective**: Verify that critical emails are protected from deletion.  
+**Precondition**: User has emails that should be protected based on safety criteria.  
+**Steps**:
+1. Enable all deletion rules
+2. Run the deletion process
+3. Verify that critical emails are preserved
+
+**Expected Result**: Emails matching critical criteria (containing attachments, from contacts, etc.) are preserved.  
+**Pass Criteria**: No critical emails are deleted during the process.
+
+### TC-3.6: Deletion Preview & Confirmation
+**Objective**: Verify that users can preview and confirm deletions before execution.  
+**Precondition**: System has identified emails for potential deletion.  
+**Steps**:
+1. Generate deletion plan
+2. Review emails in preview mode
+3. Modify selections if needed
+4. Confirm deletion
+
+**Expected Result**: Users can review, modify, and confirm the deletion plan before execution.  
+**Pass Criteria**: The preview accurately reflects what will be deleted, and changes to selections are respected.
+
+### TC-3.7: Undo Deletion Functionality
+**Objective**: Verify that deleted emails can be restored within the grace period.  
+**Precondition**: User has recently deleted emails using the application.  
+**Steps**:
+1. Navigate to the deletion history
+2. Select emails to restore
+3. Execute the restoration process
+
+**Expected Result**: Selected emails are successfully restored from trash.  
+**Pass Criteria**: All selected emails are restored to their original locations.
+
+## 4. User Interface & Experience Tests
+
+### TC-4.1: Dashboard Statistics Accuracy
+**Objective**: Verify that dashboard statistics accurately reflect the email state.  
+**Precondition**: User has completed an initial email analysis.  
+**Steps**:
+1. Review dashboard statistics
+2. Compare with manual counts of email categories
+3. Verify storage usage information
+
+**Expected Result**: Dashboard statistics match the actual email categorization and storage usage.  
+**Pass Criteria**: Statistics are accurate within a 5% margin of error.
+
+### TC-4.2: Rule Configuration Interface Usability
+**Objective**: Verify that users can easily configure and understand rules.  
+**Precondition**: User is authenticated and has accessed the rule configuration screen.  
+**Steps**:
+1. Navigate to rule configuration
+2. Modify existing rules
+3. Create new custom rules
+4. Save configuration changes
+
+**Expected Result**: Rules can be configured intuitively and changes are saved correctly.  
+**Pass Criteria**: Users can successfully modify rules without errors or confusion.
+
+### TC-4.3: Batch Processing Performance
+**Objective**: Verify that the application can process large batches of emails efficiently.  
+**Precondition**: User has a large number of emails (10,000+) in their inbox.  
+**Steps**:
+1. Initiate a full email analysis in batches of 1K
+2. Maintain categorization where Move functionality has been manually applied
+3. Apply existing rules per category to only return senders that have not been configured
+
+**Expected Result**: The application processes emails efficiently without hanging or crashing.  
+**Pass Criteria**: Processing completes within acceptable time limits (at least 1000 emails/minute).
