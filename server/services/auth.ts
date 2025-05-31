@@ -87,6 +87,16 @@ export function getAuthClientForUser(accessToken: string, refreshToken?: string)
     refresh_token: refreshToken,
   });
 
+  // Add automatic token refresh
+  client.on('tokens', (tokens) => {
+    if (tokens.refresh_token) {
+      console.log('Received new refresh token');
+    }
+    if (tokens.access_token) {
+      console.log('Received new access token');
+    }
+  });
+
   return client;
 }
 

@@ -515,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const messageId of messageIds) {
         try {
           console.log(`Trashing message ID: ${messageId}`);
-          const result = await moveMessageToTrash(req.session.accessToken!, messageId);
+          const result = await moveMessageToTrash(req.session.accessToken!, messageId, req.session.refreshToken);
           console.log(`Successfully trashed message: ${messageId}`);
           allResults.push({ messageId, success: true, data: result });
           successCount++;

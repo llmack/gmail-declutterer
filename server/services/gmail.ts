@@ -176,10 +176,10 @@ export async function getTemporaryCodeEmails(accessToken: string): Promise<Tempo
   }
 }
 
-export async function moveMessageToTrash(accessToken: string, messageId: string) {
+export async function moveMessageToTrash(accessToken: string, messageId: string, refreshToken?: string) {
   try {
-    // Create authenticated client
-    const client = getAuthClientForUser(accessToken);
+    // Create authenticated client with refresh token for automatic token refresh
+    const client = getAuthClientForUser(accessToken, refreshToken);
     const gmail = google.gmail({ version: 'v1', auth: client });
     
     console.log(`Gmail API: Moving message ${messageId} to trash`);
@@ -193,26 +193,46 @@ export async function moveMessageToTrash(accessToken: string, messageId: string)
       
       console.log(`Successfully moved message ${messageId} to trash`);
       return response.data;
-    } catch (trashError) {
-      console.error(`Error using trash endpoint for ${messageId}:`, trashError);
+    } catch (trashError: any) {
+      console.error(`Error using trash endpoint for ${messageId}:`, {
+        message: trashError.message,
+        code: trashError.code,
+        status: trashError.status,
+        details: trashError.response?.data || trashError
+      });
       
       // If trash fails, try modify with TRASH label
       console.log(`Falling back to modify endpoint for message ${messageId}`);
-      const modifyResponse = await gmail.users.messages.modify({
-        userId: 'me',
-        id: messageId,
-        requestBody: {
-          addLabelIds: ['TRASH'],
-          removeLabelIds: ['INBOX']
-        }
-      });
-      
-      console.log(`Successfully modified message ${messageId} with TRASH label`);
-      return modifyResponse.data;
+      try {
+        const modifyResponse = await gmail.users.messages.modify({
+          userId: 'me',
+          id: messageId,
+          requestBody: {
+            addLabelIds: ['TRASH'],
+            removeLabelIds: ['INBOX']
+          }
+        });
+        
+        console.log(`Successfully modified message ${messageId} with TRASH label`);
+        return modifyResponse.data;
+      } catch (modifyError: any) {
+        console.error(`Error using modify endpoint for ${messageId}:`, {
+          message: modifyError.message,
+          code: modifyError.code,
+          status: modifyError.status,
+          details: modifyError.response?.data || modifyError
+        });
+        throw modifyError;
+      }
     }
-  } catch (error) {
-    console.error(`Failed to move message ${messageId} to trash:`, error);
-    throw error;
+  } catch (error: any) {
+    console.error(`Failed to move message ${messageId} to trash:`, {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      details: error.response?.data || error
+    });
+    throw new Error(`Cannot move email to trash: ${error.message || 'Unknown error'}`);
   }
 }
 
