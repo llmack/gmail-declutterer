@@ -100,14 +100,8 @@ export function useTrashEmails() {
       return response.json() as Promise<TrashEmailResponse>;
     },
     onSuccess: () => {
-      // Invalidate all Gmail data queries
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/profile'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/temp-codes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/subscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/promotions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/newsletters'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/regular'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gmail/receipts'] });
+      // Only invalidate deletion history to track the deletion record
+      // Don't invalidate email queries to prevent automatic re-analysis
       queryClient.invalidateQueries({ queryKey: ['/api/history/deletions'] });
     }
   });
